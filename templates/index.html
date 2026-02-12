@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyDown - المحمل الذكي</title>
+    <style>
+        :root { --primary: #007bff; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; width: 90%; max-width: 500px; padding: 30px; border-radius: 20px; shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 20px; }
+        .options { display: none; margin-top: 20px; gap: 10px; justify-content: center; }
+        .btn-opt { padding: 15px 25px; border: 1px solid var(--primary); background: white; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .btn-opt.active { background: var(--primary); color: white; }
+        select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: 1px solid #ccc; display: none; }
+        .header-links { position: absolute; top: 20px; right: 20px; left: 20px; display: flex; justify-content: space-between; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header-links">
+    <select id="langSwitcher" onchange="changeLang()" style="display: block; width: auto;">
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+    </select>
+    <button onclick="showHelp()" style="background:none; border:none; cursor:pointer; font-weight:bold;">❓ Help</button>
+</div>
+
+<div class="card">
+    <h1 id="title">EasyDown</h1>
+    <p id="subtitle">أدخل الرابط لنبدأ السحر</p>
+    
+    <input type="text" id="videoUrl" placeholder="https://..." oninput="showModes()">
+
+    <div id="modes" class="options">
+        <button class="btn-opt" onclick="setMode('video')" id="btnVid">🎬 Video</button>
+        <button class="btn-opt" onclick="setMode('audio')" id="btnAud">🎵 Audio</button>
+    </div>
+
+    <select id="qualitySelect">
+        <option value="" disabled selected id="qPlaceholder">اختر الجودة...</option>
+    </select>
+
+    <button id="dlBtn" style="margin-top:20px; width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; display:none;" onclick="startDownload()">
+        تحميل الآن
+    </button>
+</div>
+
+<script>
+    const texts = {
+        ar: { title: "EasyDown", subtitle: "أدخل الرابط لنبدأ السحر", qVid: ["1080p (Full HD)", "720p (HD)", "480p"], qAud: ["320kbps (High)", "192kbps (Medium)", "128kbps (Basic)"], dl: "تحميل الآن" },
+        en: { title: "EasyDown", subtitle: "Paste link to start magic", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"], dl: "Download Now" }
+    };
+
+    function showModes() {
+        if(document.getElementById('videoUrl').value.length > 5) {
+            document.getElementById('modes').style.display = 'flex';
+        }
+    }
+
+    function setMode(mode) {
+        document.getElementById('btnVid').classList.remove('active');
+        document.getElementById('btnAud').classList.remove('active');
+        document.getElementById(mode === 'video' ? 'btnVid' : 'btnAud').classList.add('active');
+        
+        const qSelect = document.getElementById('qualitySelect');
+        const lang = document.getElementById('langSwitcher').value;
+        qSelect.innerHTML = '<option disabled selected>Choose Quality...</option>';
+        
+        const list = mode === 'video' ? texts[lang].qVid : texts[lang].qAud;
+        list.forEach(q => {
+            let opt = document.createElement('option');
+            opt.value = q; opt.innerText = q;
+            qSelect.appendChild(opt);
+        });
+        
+        qSelect.style.display = 'block';
+        document.getElementById('dlBtn').style.display = 'block';
+    }
+
+    function changeLang() {
+        const l = document.getElementById('langSwitcher').value;
+        document.body.dir = l === 'ar' ? 'rtl' : 'ltr';
+        document.getElementById('title').innerText = texts[l].title;
+        document.getElementById('subtitle').innerText = texts[l].subtitle;
+        document.getElementById('dlBtn').innerText = texts[l].dl;
+    }
+
+    function showHelp() {
+        alert("1. Paste URL\n2. Choose Video or Audio\n3. Select Quality\n4. Enjoy!");
+    }
+
+    function startDownload() {
+        alert("جاري التحميل... (هنا نربط مع الباكيند)");
+    }
+</script>
+</body>
+</html>
