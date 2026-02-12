@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyDown - النسخة النهائية</title>
+    <title>EasyDown - المحمل الذكي</title>
     
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#007bff">
+
     <style>
         :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         
         .card { background: rgba(255,255,255,0.98); width: 90%; max-width: 450px; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; position: relative; }
         
-        /* Header */
         .header-menu { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; }
         .lang-select { border: none; background: #fff; border-radius: 5px; padding: 5px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Progress & Inputs */
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
         input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
         input.invalid { border-color: var(--danger); }
 
-        /* Buttons */
         .modes { display: flex; gap: 10px; margin: 20px 0; }
         .modes button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #eee; font-weight: bold; }
         .modes button.active { background: var(--primary); color: white; }
@@ -29,11 +29,9 @@
         .cancel-btn { width: 100%; padding: 10px; background: none; color: var(--danger); border: 1px solid var(--danger); border-radius: 12px; cursor: pointer; display: none; margin-top: 10px; }
         .retry-btn { width: 100%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 12px; display: none; margin-top: 10px; cursor: pointer; }
         
-        /* Final Download Link */
         #finalDownload { display: none; margin-top: 15px; padding: 15px; background: #e9f7ef; border: 1px solid var(--success); border-radius: 12px; }
         #finalDownload a { color: var(--success); text-decoration: none; font-weight: bold; font-size: 18px; }
 
-        /* Toast & Ad */
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; animation: slideUp 0.3s; }
         #adArea { display: none; margin-top: 15px; border-radius: 12px; background: #fdfdfd; padding: 10px; border: 1px dashed #ccc; }
         .status-text { font-size: 14px; color: var(--primary); margin-top: 5px; display: none; font-weight: bold; }
@@ -84,13 +82,20 @@
 
 <script>
     let currentMode = 'video';
-    let processInterval;
+    let progressInterval;
     const allowedDomains = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'pinterest.com', 'likee.video'];
 
     const dict = {
         ar: { title: "EasyDown", sub: "أدخل الرابط لنبدأ المعالجة", placeholder: "الصق الرابط هنا...", dl: "تحميل الآن", cancel: "إلغاء العملية", error: "⚠️ رابط غير مدعوم", processing: "جاري المعالجة...", done: "✅ تم التجهيز!", failed: "❌ فشل التحميل", canceled: "تم الإلغاء", retry: "إعادة المحاولة", dlReady: "اضغط هنا للتحميل", ad: "إعلان ممول" },
         en: { title: "EasyDown", sub: "Enter link to start", placeholder: "Paste link here...", dl: "Download Now", cancel: "Cancel", error: "⚠️ Unsupported link", processing: "Processing...", done: "✅ Ready!", failed: "❌ Processing failed", canceled: "Canceled", retry: "Retry", dlReady: "Click here to Download", ad: "Sponsored" }
     };
+
+    // تسجيل الـ Service Worker للـ PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Failed', err));
+        });
+    }
 
     function showToast(msg, type = 'info') {
         const t = document.getElementById('toast');
@@ -127,9 +132,11 @@
         document.getElementById('aBtn').classList.toggle('active', m === 'audio');
     }
 
-    function startProcess() {
+    async function startProcess() {
         const l = document.getElementById('langSwitch').value;
-        // Reset UI
+        const url = document.getElementById('videoUrl').value.trim();
+
+        // UI Setup
         document.getElementById('dlBtn').style.display = 'none';
         document.getElementById('retryBtn').style.display = 'none';
         document.getElementById('finalDownload').style.display = 'none';
@@ -140,40 +147,50 @@
         document.getElementById('statusTxt').style.color = 'var(--primary)';
         document.getElementById('videoUrl').disabled = true;
 
+        // Fake Progress Bar Logic
         let progress = 0;
-        processInterval = setInterval(() => {
-            progress += Math.random() * 20;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(processInterval);
-                
-                // محاكاة نتيجة السيرفر (استبدلها لاحقاً بطلب fetch)
-                let success = Math.random() > 0.2; 
-                
-                if(success) {
-                    document.getElementById('statusTxt').innerText = dict[l].done;
-                    showToast(dict[l].done, 'success');
-                    document.getElementById('cancelBtn').style.display = 'none';
-                    // إظهار رابط التحميل النهائي
-                    const finalBox = document.getElementById('finalDownload');
-                    finalBox.style.display = 'block';
-                    document.getElementById('downloadLink').href = "#"; // ضع رابط الملف الحقيقي هنا
-                } else {
-                    document.getElementById('statusTxt').innerText = dict[l].failed;
-                    document.getElementById('statusTxt').style.color = 'var(--danger)';
-                    showToast(dict[l].failed, 'error');
-                    document.getElementById('retryBtn').style.display = 'block';
-                    document.getElementById('cancelBtn').style.display = 'none';
-                }
-            }
-            document.getElementById('pBar').style.width = progress + '%';
+        let pBar = document.getElementById('pBar');
+        pBar.style.width = '0%';
+        progressInterval = setInterval(() => {
+            if (progress < 90) progress += Math.random() * 5;
+            pBar.style.width = progress + '%';
             document.getElementById('statusTxt').innerText = `${dict[l].processing} ${Math.round(progress)}%`;
-        }, 400);
+        }, 500);
+
+        try {
+            // الطلب الحقيقي للسيرفر
+            const response = await fetch('/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, mode: currentMode })
+            });
+
+            const result = await response.json();
+            clearInterval(progressInterval);
+
+            if (response.ok) {
+                pBar.style.width = '100%';
+                document.getElementById('statusTxt').innerText = dict[l].done;
+                showToast(dict[l].done, 'success');
+                document.getElementById('finalDownload').style.display = 'block';
+                document.getElementById('downloadLink').href = result.download_url;
+                document.getElementById('cancelBtn').style.display = 'none';
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (err) {
+            clearInterval(progressInterval);
+            document.getElementById('statusTxt').innerText = dict[l].failed;
+            document.getElementById('statusTxt').style.color = 'var(--danger)';
+            showToast(dict[l].failed, 'error');
+            document.getElementById('retryBtn').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = 'none';
+        }
     }
 
     function cancelProcess() {
         const l = document.getElementById('langSwitch').value;
-        clearInterval(processInterval);
+        if (progressInterval) clearInterval(progressInterval);
         document.getElementById('pContainer').style.display = 'none';
         document.getElementById('statusTxt').style.display = 'none';
         document.getElementById('adArea').style.display = 'none';
@@ -181,7 +198,7 @@
         document.getElementById('dlBtn').style.display = 'block';
         document.getElementById('videoUrl').disabled = false;
         document.getElementById('pBar').style.width = '0%';
-        showToast(dict[l].canceled, 'info'); // تم تعديلها لتصبح ديناميكية
+        showToast(dict[l].canceled, 'info');
     }
 </script>
 </body>
