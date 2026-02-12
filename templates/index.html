@@ -1,174 +1,244 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyDown - المحمل الذكي</title>
-    <style>
-        :root { --primary: #007bff; --bg: #f8f9fa; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyDown - المحمل الذكي</title>
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg) url("/static/logo.png") no-repeat center center;
-            background-size: 200px 200px; /* حجم الشعار */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
+<!-- PWA meta -->
+<meta name="theme-color" content="#007bff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EasyDown">
 
-        .card {
-            background: rgba(255,255,255,0.95);
-            width: 90%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-        }
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="static/icons/icon-192.png">
 
-        input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
+<style>
+:root { --primary: #007bff; --bg: #f8f9fa; }
 
-        .options {
-            display: none;
-            margin-top: 20px;
-            gap: 10px;
-            justify-content: center;
-        }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
 
-        .btn-opt {
-            padding: 15px 25px;
-            border: 1px solid var(--primary);
-            background: white;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+/* Header */
+.header {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+.menu { position: relative; }
+.menu-btn { font-size: 28px; background:none; border:none; cursor:pointer; }
+.dropdown {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    position: absolute;
+    top:35px;
+    left:0;
+    background:white;
+    box-shadow:0 4px 8px rgba(0,0,0,0.2);
+    border-radius:8px;
+    padding:10px;
+    min-width:220px;
+    z-index:100;
+}
+.dropdown.show { max-height:300px; }
+.dropdown label, .dropdown a, .dropdown select { display:block; padding:6px; text-decoration:none; color:black; cursor:pointer; }
+.dropdown a:hover { background:var(--primary); color:white; }
 
-        .btn-opt.active {
-            background: var(--primary);
-            color: white;
-        }
+/* Card */
+.card {
+    background: rgba(255,255,255,0.95);
+    width: 90%;
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    position: relative;
+}
+input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+.options {
+    display: none;
+    margin-top: 20px;
+    gap: 10px;
+    justify-content: center;
+    opacity:0;
+    transform:translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.options.show { opacity:1; transform:translateY(0); display:flex; }
 
-        .header-links {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            left: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
+.btn-opt {
+    padding: 15px 25px;
+    border: 1px solid var(--primary);
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition:0.3s;
+}
+.btn-opt.active { background: var(--primary); color:white; }
 
-        select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: 1px solid #ccc; display: none; }
+select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: 1px solid #ccc; display:none; transition: transform 0.3s, opacity 0.3s; }
 
-    </style>
+.download-btn {
+    margin-top:20px;
+    width:100%;
+    padding:15px;
+    background:var(--primary);
+    color:white;
+    border:none;
+    border-radius:10px;
+    display:none;
+    font-size:16px;
+    cursor:pointer;
+    transition: transform 0.3s, opacity 0.3s;
+    transform: scale(0.95);
+    opacity: 0;
+}
+.download-btn.show { transform: scale(1); opacity:1; }
+
+#iosInstall {
+    display:none;
+    padding:10px;
+    background:#007bff;
+    color:white;
+    border-radius:8px;
+    text-align:center;
+    margin-bottom:10px;
+}
+
+#loadingSpinner { display:none; margin-top:10px; font-size:16px; color:#007bff; }
+</style>
 </head>
+
 <body>
 
-<div class="header-links">
-    <select id="langSwitcher" onchange="changeLang()" style="display: block; width: auto;">
-        <option value="ar">العربية</option>
-        <option value="en">English</option>
-    </select>
-    <button onclick="showHelp()" style="background:none; border:none; cursor:pointer; font-weight:bold;">❓ Help</button>
+<div class="header">
+    <div class="menu">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="dropdown" id="dropdownMenu">
+            <label>اللغة / Language</label>
+            <select id="langSwitcher" onchange="changeLang()">
+                <option value="ar">العربية</option>
+                <option value="en">English</option>
+            </select>
+            <a href="#" onclick="showHelp()">❓ تعليمات التنزيل</a>
+        </div>
+    </div>
+    <img src="static/logo.png" class="logo">
 </div>
 
 <div class="card">
+    <div id="iosInstall">اضغط على زر المشاركة ثم اختر "Add to Home Screen" لتثبيت التطبيق</div>
+
     <h1 id="title">EasyDown</h1>
     <p id="subtitle">أدخل الرابط لنبدأ السحر</p>
     
     <input type="text" id="videoUrl" placeholder="https://..." oninput="showModes()">
 
     <div id="modes" class="options">
-        <button class="btn-opt" onclick="setMode('video')" id="btnVid">🎬 Video</button>
-        <button class="btn-opt" onclick="setMode('audio')" id="btnAud">🎵 Audio</button>
+        <button class="btn-opt" onclick="setMode('video')" id="btnVid">🎬 فيديو</button>
+        <button class="btn-opt" onclick="setMode('audio')" id="btnAud">🎵 صوت</button>
     </div>
 
     <select id="qualitySelect">
-        <option value="" disabled selected id="qPlaceholder">اختر الجودة...</option>
+        <option value="" disabled selected>اختر الجودة...</option>
     </select>
 
-    <button id="dlBtn" style="margin-top:20px; width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; display:none;" onclick="startDownload()">
-        تحميل الآن
-    </button>
+    <div id="loadingSpinner">🔄 جاري التحميل...</div>
+    <button class="download-btn" id="dlBtn" onclick="startDownload()">تحميل الآن</button>
 </div>
 
 <script>
-    const texts = {
-        ar: { title: "EasyDown", subtitle: "أدخل الرابط لنبدأ السحر", dl: "تحميل الآن", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"] },
-        en: { title: "EasyDown", subtitle: "Paste link to start magic", dl: "Download Now", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"] }
-    };
-
-    function showModes() {
-        if(document.getElementById('videoUrl').value.length > 5) {
-            document.getElementById('modes').style.display = 'flex';
-        }
+const texts = {
+    ar:{title:"EasyDown",subtitle:"أدخل الرابط لنبدأ السحر",dl:"تحميل الآن",
+        qVid:["1080p","720p","480p"],qAud:["320kbps","192kbps","128kbps"],
+        help:`📖 تعليمات التنزيل:\n\n١. افتح تطبيق Instagram/TikTok/Pinterest/Likee/YouTube\n٢. اختر الفيديو الذي يعجبك\n٣. اضغط على زر السهم لأعلى أو النقاط الثلاث في الزاوية العلوية اليمنى\n٤. اضغط على زر "نسخ"\n٥. أرسل الرابط إلى EasyDown وستحصل على الفيديو بدون علامة مائية خلال ثوانٍ.`
+    },
+    en:{title:"EasyDown",subtitle:"Paste link to start magic",dl:"Download Now",
+        qVid:["1080p","720p","480p"],qAud:["320kbps","192kbps","128kbps"],
+        help:`📖 Download Instructions:\n\n1. Open Instagram/TikTok/Pinterest/Likee/YouTube\n2. Choose a video you like\n3. Tap the share arrow or three dots at top-right\n4. Tap "Copy"\n5. Paste the link into EasyDown to get the video in seconds.`
     }
+};
 
-    function setMode(mode) {
-        document.getElementById('btnVid').classList.remove('active');
-        document.getElementById('btnAud').classList.remove('active');
-        document.getElementById(mode === 'video' ? 'btnVid' : 'btnAud').classList.add('active');
+function toggleMenu(){document.getElementById("dropdownMenu").classList.toggle("show");}
+function showModes(){
+    const urlVal=document.getElementById('videoUrl').value;
+    if(urlVal.length>5){const opts=document.getElementById('modes');opts.style.display='flex';opts.classList.add('show');}
+}
+function setMode(mode){
+    document.getElementById('btnVid').classList.remove('active'); document.getElementById('btnAud').classList.remove('active');
+    document.getElementById(mode==='video'?'btnVid':'btnAud').classList.add('active');
 
-        const qSelect = document.getElementById('qualitySelect');
-        const lang = document.getElementById('langSwitcher').value;
-        qSelect.innerHTML = '<option disabled selected>اختر الجودة...</option>';
-        const list = mode === 'video' ? texts[lang].qVid : texts[lang].qAud;
-        list.forEach(q => {
-            let opt = document.createElement('option');
-            opt.value = q; opt.innerText = q;
-            qSelect.appendChild(opt);
-        });
-        qSelect.style.display = 'block';
-        document.getElementById('dlBtn').style.display = 'block';
-    }
+    const qSelect=document.getElementById('qualitySelect');
+    qSelect.innerHTML='<option disabled selected>جاري جلب الجودة...</option>'; qSelect.style.display='block';
+    document.getElementById('dlBtn').style.display='block'; document.getElementById('dlBtn').classList.add('show'); qSelect.classList.add('show');
 
-    function changeLang() {
-        const l = document.getElementById('langSwitcher').value;
-        document.body.dir = l === 'ar' ? 'rtl' : 'ltr';
-        document.getElementById('title').innerText = texts[l].title;
-        document.getElementById('subtitle').innerText = texts[l].subtitle;
-        document.getElementById('dlBtn').innerText = texts[l].dl;
-    }
+    // طلب للجودة من السيرفر
+    fetch('/get_qualities',{method:'POST',body:new URLSearchParams({videoUrl: document.getElementById('videoUrl').value, mode})})
+    .then(res=>res.json()).then(data=>{
+        qSelect.innerHTML='<option disabled selected>اختر الجودة...</option>';
+        data.qualities.forEach(q=>{let opt=document.createElement('option');opt.value=q;opt.innerText=q;qSelect.appendChild(opt);});
+    });
+}
+function changeLang(){
+    const l=document.getElementById('langSwitcher').value;
+    document.body.dir=l==='ar'?'rtl':'ltr';
+    document.getElementById('title').innerText=texts[l].title;
+    document.getElementById('subtitle').innerText=texts[l].subtitle;
+    document.getElementById('dlBtn').innerText=texts[l].dl;
+}
+function showHelp(){const l=document.getElementById('langSwitcher').value;alert(texts[l].help);}
+function isValidURL(url){
+    try{const u=new URL(url); const allowed=['instagram.com','tiktok.com','youtube.com','pinterest.com','likee.video']; if(!allowed.some(d=>u.hostname.includes(d))) return false; return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}
+}
+function startDownload(){
+    const url=document.getElementById('videoUrl').value.trim();
+    if(!url || !isValidURL(url)){alert("❌ الرابط غير مدعوم"); return;}
+    const mode=document.getElementById('btnVid').classList.contains('active')?'video':'audio';
+    document.getElementById('loadingSpinner').style.display='block';
+    document.getElementById('dlBtn').disabled=true;
 
-    function showHelp() {
-        alert("1. Paste URL\n2. Choose Video or Audio\n3. Select Quality\n4. Enjoy!");
-    }
+    const formData=new FormData(); formData.append('videoUrl',url); formData.append('mode',mode);
 
-    function startDownload() {
-        const url = document.getElementById('videoUrl').value;
-        const mode = document.getElementById('btnVid').classList.contains('active') ? 'video' : 'audio';
+    fetch('/download',{method:'POST',body:formData})
+    .then(res=>{if(!res.ok)throw new Error("فشل التحميل"); return res.blob();})
+    .then(blob=>{const link=document.createElement('a');const filename=url.split('/').pop()+(mode==='audio'?'.mp3':'.mp4');link.href=window.URL.createObjectURL(blob);link.download=filename;link.click();})
+    .catch(err=>alert("❌ "+err.message))
+    .finally(()=>{document.getElementById('loadingSpinner').style.display='none'; document.getElementById('dlBtn').disabled=false;});
 
-        if (!url) { alert("❌ الرجاء إدخال رابط الفيديو"); return; }
+}
 
-        const formData = new FormData();
-        formData.append('videoUrl', url);
-        formData.append('mode', mode);
+// iOS Install Prompt
+if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){document.getElementById('iosInstall').style.display='block';}
 
-        fetch('/download', { method: 'POST', body: formData })
-        .then(response => {
-            if (!response.ok) throw new Error("فشل التحميل");
-            return response.blob();
-        })
-        .then(blob => {
-            const link = document.createElement('a');
-            const filename = url.split('/').pop() + (mode === 'audio' ? '.mp3' : '.mp4');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-        })
-        .catch(err => alert("❌ " + err.message));
-    }
+// Register Service Worker
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(err=>console.log('SW failed',err));});}
 </script>
-
 </body>
 </html>
