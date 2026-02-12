@@ -6,12 +6,13 @@
     <title>EasyDown - المحمل الذكي</title>
     
     <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/logo.png">
     <link rel="icon" href="/static/logo.png">
     <meta name="theme-color" content="#007bff">
 
     <style>
         :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
         .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
         .brand { display: flex; align-items: center; gap: 10px; }
@@ -19,27 +20,30 @@
         .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .pwa-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; outline: none; }
         .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; user-select: none; }
 
-        .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; }
+        .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; }
         .sidebar.active { right: 0; visibility: visible; }
         .close-sidebar { font-size: 24px; cursor: pointer; color: #888; display: block; margin-bottom: 20px; text-align: left; }
 
         .card { background: rgba(255,255,255,0.98); width: 92%; max-width: 450px; padding: 40px 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; z-index: 10; }
         
-        input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; }
-        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; margin-top: 15px; }
+        input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; margin-bottom: 15px; }
         
-        /* صندوق المساعدة والتثبيت */
-        .help-box, .install-guide { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: right; font-size: 14px; color: #555; line-height: 1.6; border: 1px solid #eee; }
-        .install-guide { background: #eefbff; border-color: #bee5eb; color: #0c5460; }
-        .lang-btn { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+        /* أزرار اختيار النمط */
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: 2px solid #eee; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .mode-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0,123,255,0.05); }
+
+        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
+        
+        /* مساحة الإعلانات */
+        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; }
 
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
-        #finalDownload { display: none; margin-top: 15px; padding: 20px; background: #e9f7ef; border: 1px solid var(--success); border-radius: 15px; }
-        #finalDownload a { color: var(--success); text-decoration: none; font-weight: bold; }
+        
+        .status-msg { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -50,7 +54,6 @@
         <span>EasyDown</span>
     </div>
     <div class="header-actions">
-        <button id="pwaInstall" class="pwa-btn">📲</button>
         <div class="menu-btn" onclick="toggleSidebar()">☰</div>
     </div>
 </header>
@@ -61,47 +64,60 @@
     <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
     <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
     
-    <div class="install-guide" id="install-instructions">
-        </div>
-
+    <div class="install-guide" id="install-instructions"></div>
     <div class="help-box" id="help-content"></div>
 </aside>
 
 <div class="card">
     <h1 id="txt-title">EasyDown</h1>
     <p id="txt-sub">أدخل الرابط لنبدأ</p>
+    
     <input type="text" id="videoUrl" placeholder="الصق الرابط هنا..." oninput="validateInput()">
     
-    <div id="pContainer" class="progress-container"><div id="pBar" class="progress-bar"></div></div>
-    <div id="statusTxt" style="font-size:14px; color:var(--primary); margin-top:5px; font-weight:bold;"></div>
-    
-    <div id="finalDownload">
-        <a href="#" id="downloadLink" download>📥 <span id="txt-dl-ready">جاهز للتحميل</span></a>
+    <div class="mode-selector" id="modeArea">
+        <button class="mode-btn active" id="vBtn" onclick="setMode('video')">🎬 فيديو</button>
+        <button class="mode-btn" id="aBtn" onclick="setMode('audio')">🎵 صوت MP3</button>
     </div>
+
+    <div id="ad-box">
+        <small style="color:#856404">إعلان ممول</small>
+        <div style="height:80px; display:flex; align-items:center; justify-content:center; color:#666;">
+            مساحة الإعلانات تظهر هنا أثناء الانتظار
+        </div>
+    </div>
+
+    <div id="pContainer" class="progress-container"><div id="pBar" class="progress-bar"></div></div>
+    <div id="statusTxt" class="status-msg"></div>
 
     <button id="dlBtn" class="main-btn" onclick="startProcess()">تحميل الآن</button>
 </div>
 
 <script>
     let currentLang = 'ar';
-    let deferredPrompt;
+    let currentMode = 'video';
 
     const dict = {
         ar: { 
             title: "EasyDown", sub: "أدخل الرابط لنبدأ", dl: "تحميل الآن", menu: "القائمة",
             help: "📖 <b>المساعدة:</b> انسخ الرابط ثم الصقه هنا واضغط تحميل.",
-            ios: "📱 <b>للتثبيت على آيفون:</b> اضغط على زر المشاركة المنبثق في المتصفح ثم اختر 'إضافة إلى الشاشة الرئيسية'.",
-            android: "📱 <b>للتثبيت كـ تطبيق:</b> اضغط على النقاط الثلاث (⋮) في المتصفح ثم اختر 'تثبيت التطبيق'."
+            ios: "📱 <b>للتثبيت:</b> اضغط زر المشاركة ثم 'إضافة إلى الشاشة الرئيسية'.",
+            android: "📱 <b>للتثبيت:</b> اضغط (⋮) ثم 'تثبيت التطبيق'."
         },
         en: { 
             title: "EasyDown", sub: "Paste link to start", dl: "Download Now", menu: "Menu",
             help: "📖 <b>Help:</b> Copy link, paste it and click Download.",
-            ios: "📱 <b>Install on iPhone:</b> Tap the 'Share' button and select 'Add to Home Screen'.",
-            android: "📱 <b>Install as App:</b> Tap the menu (⋮) and select 'Install App'."
+            ios: "📱 <b>Install:</b> Tap Share then 'Add to Home Screen'.",
+            android: "📱 <b>Install:</b> Tap (⋮) then 'Install App'."
         }
     };
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+    function setMode(m) {
+        currentMode = m;
+        document.getElementById('vBtn').classList.toggle('active', m === 'video');
+        document.getElementById('aBtn').classList.toggle('active', m === 'audio');
+    }
 
     function updateLang(l) {
         currentLang = l;
@@ -111,8 +127,6 @@
         document.getElementById('dlBtn').innerText = dict[l].dl;
         document.getElementById('txt-menu-title').innerText = dict[l].menu;
         document.getElementById('help-content').innerHTML = dict[l].help;
-        
-        // كشف نوع الجهاز وتغيير التعليمات
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         document.getElementById('install-instructions').innerHTML = isIOS ? dict[l].ios : dict[l].android;
     }
@@ -123,34 +137,51 @@
     }
 
     async function startProcess() {
-        // ... نفس كود التحميل السابق ...
         const url = document.getElementById('videoUrl').value.trim();
+        
+        // تجهيز الواجهة
+        document.getElementById('dlBtn').style.display = 'none';
+        document.getElementById('modeArea').style.display = 'none';
+        document.getElementById('ad-box').style.display = 'block';
         document.getElementById('pContainer').style.display = 'block';
-        const response = await fetch('/download', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            document.getElementById('finalDownload').style.display = 'block';
-            document.getElementById('downloadLink').href = result.download_url;
+        
+        let p = 0;
+        const bar = document.getElementById('pBar');
+        const st = document.getElementById('statusTxt');
+        
+        const itv = setInterval(() => {
+            if(p < 90) p += Math.random() * 5;
+            bar.style.width = p + '%';
+            st.innerText = currentLang === 'ar' ? `جاري التجهيز... ${Math.round(p)}%` : `Processing... ${Math.round(p)}%`;
+        }, 500);
+
+        try {
+            const response = await fetch('/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, mode: currentMode })
+            });
+            const result = await response.json();
+            clearInterval(itv);
+
+            if (response.ok) {
+                bar.style.width = '100%';
+                st.innerText = currentLang === 'ar' ? "✅ جاهز! يبدأ التحميل الآن..." : "✅ Ready! Downloading...";
+                
+                // التحميل التلقائي الفوري للهاتف
+                setTimeout(() => {
+                    window.location.href = result.download_url;
+                }, 1000);
+            } else {
+                alert(result.error);
+                location.reload();
+            }
+        } catch (e) {
+            clearInterval(itv);
+            alert("Connection Error");
+            location.reload();
         }
     }
-
-    // PWA Logic
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('pwaInstall').style.display = 'block';
-    });
-
-    document.getElementById('pwaInstall').addEventListener('click', () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt = null;
-        }
-    });
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
     
