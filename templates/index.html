@@ -6,9 +6,13 @@
     <title>EasyDown - المحمل الذكي</title>
     
     <link rel="manifest" href="/static/manifest.json">
-    <link rel="apple-touch-icon" href="/static/logo.png">
     <link rel="icon" href="/static/logo.png">
     <meta name="theme-color" content="#007bff">
+
+    <link rel="apple-touch-icon" href="/static/logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EasyDown">
 
     <style>
         :root { --primary: #007bff; --bg: #f4f7f6; --text: #333; }
@@ -181,11 +185,10 @@
                 bar.style.width = '100%';
                 st.innerText = dict[currentLang].ready;
                 
-                // الحل النهائي للتحميل على الهاتف والكمبيوتر
                 const link = document.createElement('a');
                 link.href = result.download_url;
-                link.setAttribute('download', ''); // يحفز المتصفح على التنزيل
-                link.target = '_blank'; // مهم جداً لمتصفحات الموبايل
+                link.setAttribute('download', '');
+                link.target = '_blank';
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -206,7 +209,6 @@
         }
     }
 
-    // منطق PWA - زر التثبيت
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
