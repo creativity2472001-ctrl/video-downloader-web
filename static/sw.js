@@ -5,17 +5,18 @@ const ASSETS = [
   '/static/manifest.json'
 ];
 
-// 1. التثبيت: حفظ ملفات الواجهة فقط
+// 1. التثبيت: حفظ ملفات الواجهة الأساسية
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // إشعار: نستخدم 'force-cache' لضمان تحديث الملفات عند التغيير
       return cache.addAll(ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// 2. التفعيل: تنظيف الإصدارات القديمة
+// 2. التفعيل: تنظيف الكاش القديم فوراً
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -27,18 +28,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. معالجة الطلبات: ضمان عمل مشغل الفيديو (مثل البوت)
+// 3. معالجة الطلبات: استثناء التحميلات + نظام (الشبكة أولاً) للواجهة
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // استثناء حاسم: أي طلب يحتوي على /files/ أو /download 
-  // يجب أن يمر مباشرة للشبكة دون أي تدخل من الكاش لضمان الحفظ في الاستوديو
+  // استثناء حاسم: الروابط الحيوية لا تُلمس نهائياً
   if (url.pathname.includes('/download') || url.pathname.includes('/files/')) {
     return; 
   }
 
   event.respondWith(
+    // نحاول جلب الملف من الشبكة أولاً لتحديث الواجهة دائماً
     fetch(event.request).catch(() => {
+      // إذا انقطع الإنترنت، نستخدم الملفات المخزنة (Offline Mode)
       return caches.match(event.request);
     })
   );
