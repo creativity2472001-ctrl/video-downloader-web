@@ -1,11 +1,11 @@
 {
   "name": "EasyDown - المحمل الذكي",
   "short_name": "EasyDown",
-  "description": "قم بتحميل الفيديوهات بسهولة من Instagram, TikTok, YouTube وأكثر.",
+  "description": "تحميل الفيديوهات من Instagram, TikTok, YouTube بدون علامة مائية.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f8f9fa",
+  "background_color": "#f4f7f6",
   "theme_color": "#007bff",
   "orientation": "portrait",
   "dir": "rtl",
@@ -16,37 +16,33 @@
       "src": "/static/icons/icon-72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     },
     {
       "src": "/static/icons/icon-144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     },
     {
       "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     },
     {
       "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     }
   ],
   "screenshots": [
     {
       "src": "/static/screenshots/home.png",
       "sizes": "1080x1920",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/screenshots/download.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
+      "type": "image/png",
+      "label": "الصفحة الرئيسية للمحمل الذكي"
     }
   ],
   "prefer_related_applications": false
