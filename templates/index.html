@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EasyDown - المحمل الذكي</title>
     
     <link rel="manifest" href="/static/manifest.json">
@@ -14,12 +14,14 @@
         :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
-        .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
+        /* الهيدر مع زر التثبيت */
+        .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
         .brand { display: flex; align-items: center; gap: 10px; }
         .brand img { width: 35px; height: 35px; border-radius: 8px; }
         .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
+        .install-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; outline: none; padding: 0; }
         .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; user-select: none; }
 
         .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; }
@@ -30,20 +32,19 @@
         
         input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; margin-bottom: 15px; }
         
-        /* أزرار اختيار النمط */
         .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
         .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: 2px solid #eee; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .mode-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0,123,255,0.05); }
 
         .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
         
-        /* مساحة الإعلانات */
-        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; }
+        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; text-align: right; }
 
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
         
         .status-msg { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 5px; }
+        .lang-btn { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -54,6 +55,7 @@
         <span>EasyDown</span>
     </div>
     <div class="header-actions">
+        <button id="pwaInstall" class="install-btn" title="تثبيت التطبيق">📲</button>
         <div class="menu-btn" onclick="toggleSidebar()">☰</div>
     </div>
 </header>
@@ -63,9 +65,7 @@
     <h3 id="txt-menu-title">القائمة</h3>
     <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
     <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
-    
-    <div class="install-guide" id="install-instructions"></div>
-    <div class="help-box" id="help-content"></div>
+    <div id="install-instructions" style="margin-top:20px; font-size:14px; color:#666;"></div>
 </aside>
 
 <div class="card">
@@ -81,8 +81,8 @@
 
     <div id="ad-box">
         <small style="color:#856404">إعلان ممول</small>
-        <div style="height:80px; display:flex; align-items:center; justify-content:center; color:#666;">
-            مساحة الإعلانات تظهر هنا أثناء الانتظار
+        <div style="height:60px; display:flex; align-items:center; justify-content:center; color:#666; font-size:13px;">
+            يتم الآن تجهيز الملف.. شكراً لانتظارك
         </div>
     </div>
 
@@ -95,19 +95,16 @@
 <script>
     let currentLang = 'ar';
     let currentMode = 'video';
+    let deferredPrompt;
 
     const dict = {
         ar: { 
             title: "EasyDown", sub: "أدخل الرابط لنبدأ", dl: "تحميل الآن", menu: "القائمة",
-            help: "📖 <b>المساعدة:</b> انسخ الرابط ثم الصقه هنا واضغط تحميل.",
-            ios: "📱 <b>للتثبيت:</b> اضغط زر المشاركة ثم 'إضافة إلى الشاشة الرئيسية'.",
-            android: "📱 <b>للتثبيت:</b> اضغط (⋮) ثم 'تثبيت التطبيق'."
+            ios: "📱 للتثبيت: اضغط زر 'المشاركة' ثم 'إضافة إلى الشاشة الرئيسية'."
         },
         en: { 
             title: "EasyDown", sub: "Paste link to start", dl: "Download Now", menu: "Menu",
-            help: "📖 <b>Help:</b> Copy link, paste it and click Download.",
-            ios: "📱 <b>Install:</b> Tap Share then 'Add to Home Screen'.",
-            android: "📱 <b>Install:</b> Tap (⋮) then 'Install App'."
+            ios: "📱 To Install: Tap 'Share' then 'Add to Home Screen'."
         }
     };
 
@@ -126,9 +123,8 @@
         document.getElementById('txt-sub').innerText = dict[l].sub;
         document.getElementById('dlBtn').innerText = dict[l].dl;
         document.getElementById('txt-menu-title').innerText = dict[l].menu;
-        document.getElementById('help-content').innerHTML = dict[l].help;
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        document.getElementById('install-instructions').innerHTML = isIOS ? dict[l].ios : dict[l].android;
+        document.getElementById('install-instructions').innerText = isIOS ? dict[l].ios : "";
     }
 
     function validateInput() {
@@ -138,8 +134,6 @@
 
     async function startProcess() {
         const url = document.getElementById('videoUrl').value.trim();
-        
-        // تجهيز الواجهة
         document.getElementById('dlBtn').style.display = 'none';
         document.getElementById('modeArea').style.display = 'none';
         document.getElementById('ad-box').style.display = 'block';
@@ -148,7 +142,6 @@
         let p = 0;
         const bar = document.getElementById('pBar');
         const st = document.getElementById('statusTxt');
-        
         const itv = setInterval(() => {
             if(p < 90) p += Math.random() * 5;
             bar.style.width = p + '%';
@@ -166,9 +159,9 @@
 
             if (response.ok) {
                 bar.style.width = '100%';
-                st.innerText = currentLang === 'ar' ? "✅ جاهز! يبدأ التحميل الآن..." : "✅ Ready! Downloading...";
+                st.innerText = currentLang === 'ar' ? "✅ جاهز! جاري الفتح..." : "✅ Ready! Opening...";
                 
-                // التحميل التلقائي الفوري للهاتف
+                // الفتح التلقائي لضمان حفظ الفيديو في الاستوديو (مثل البوت)
                 setTimeout(() => {
                     window.location.href = result.download_url;
                 }, 1000);
@@ -183,12 +176,27 @@
         }
     }
 
+    // منطق PWA - زر التثبيت
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('pwaInstall').style.display = 'block';
+    });
+
+    document.getElementById('pwaInstall').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('pwaInstall').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
     
-    window.onload = () => {
-        updateLang('ar');
-        document.getElementById('sidebar').classList.remove('active');
-    };
+    window.onload = () => { updateLang('ar'); };
 </script>
 </body>
 </html>
