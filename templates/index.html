@@ -43,23 +43,35 @@ body {
     object-fit: contain;
 }
 .menu { position: relative; }
-.menu-btn { font-size: 28px; background:none; border:none; cursor:pointer; }
+.menu-btn {
+    font-size: 28px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    z-index: 200;
+}
 .dropdown {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
     position: absolute;
-    top:35px;
+    top:40px;
     left:0;
     background:white;
     box-shadow:0 4px 8px rgba(0,0,0,0.2);
     border-radius:8px;
     padding:10px;
     min-width:220px;
-    z-index:100;
+    z-index:150;
 }
-.dropdown.show { max-height:300px; }
-.dropdown label, .dropdown a, .dropdown select { display:block; padding:6px; text-decoration:none; color:black; cursor:pointer; }
+.dropdown.show { max-height: 300px; }
+.dropdown label, .dropdown a, .dropdown select {
+    display:block;
+    padding:6px;
+    text-decoration:none;
+    color:black;
+    cursor:pointer;
+}
 .dropdown a:hover { background:var(--primary); color:white; }
 
 /* Card */
@@ -82,28 +94,6 @@ input {
     font-size: 16px;
     margin-bottom: 20px;
 }
-.options {
-    display: none;
-    margin-top: 20px;
-    gap: 10px;
-    justify-content: center;
-    opacity:0;
-    transform:translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-.options.show { opacity:1; transform:translateY(0); display:flex; }
-
-.btn-opt {
-    padding: 15px 25px;
-    border: 1px solid var(--primary);
-    background: white;
-    border-radius: 10px;
-    cursor: pointer;
-    transition:0.3s;
-}
-.btn-opt.active { background: var(--primary); color:white; }
-
-select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: 1px solid #ccc; display:none; transition: transform 0.3s, opacity 0.3s; }
 
 .download-btn {
     margin-top:20px;
@@ -130,6 +120,8 @@ select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; borde
     border-radius:8px;
     text-align:center;
     margin-bottom:10px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
 #loadingSpinner { display:none; margin-top:10px; font-size:16px; color:#007bff; }
@@ -159,16 +151,7 @@ select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; borde
     <h1 id="title">EasyDown</h1>
     <p id="subtitle">أدخل الرابط لنبدأ السحر</p>
     
-    <input type="text" id="videoUrl" placeholder="https://..." oninput="showModes()">
-
-    <div id="modes" class="options">
-        <button class="btn-opt" onclick="setMode('video')" id="btnVid">🎬 فيديو</button>
-        <button class="btn-opt" onclick="setMode('audio')" id="btnAud">🎵 صوت</button>
-    </div>
-
-    <select id="qualitySelect">
-        <option value="" disabled selected>اختر الجودة...</option>
-    </select>
+    <input type="text" id="videoUrl" placeholder="https://..." oninput="showDownloadBtn()">
 
     <div id="loadingSpinner">🔄 جاري التحميل...</div>
     <button class="download-btn" id="dlBtn" onclick="startDownload()">تحميل الآن</button>
@@ -177,35 +160,28 @@ select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; borde
 <script>
 const texts = {
     ar:{title:"EasyDown",subtitle:"أدخل الرابط لنبدأ السحر",dl:"تحميل الآن",
-        qVid:["1080p","720p","480p"],qAud:["320kbps","192kbps","128kbps"],
         help:`📖 تعليمات التنزيل:\n\n١. افتح تطبيق Instagram/TikTok/Pinterest/Likee/YouTube\n٢. اختر الفيديو الذي يعجبك\n٣. اضغط على زر السهم لأعلى أو النقاط الثلاث في الزاوية العلوية اليمنى\n٤. اضغط على زر "نسخ"\n٥. أرسل الرابط إلى EasyDown وستحصل على الفيديو بدون علامة مائية خلال ثوانٍ.`
     },
     en:{title:"EasyDown",subtitle:"Paste link to start magic",dl:"Download Now",
-        qVid:["1080p","720p","480p"],qAud:["320kbps","192kbps","128kbps"],
         help:`📖 Download Instructions:\n\n1. Open Instagram/TikTok/Pinterest/Likee/YouTube\n2. Choose a video you like\n3. Tap the share arrow or three dots at top-right\n4. Tap "Copy"\n5. Paste the link into EasyDown to get the video in seconds.`
     }
 };
 
-function toggleMenu(){document.getElementById("dropdownMenu").classList.toggle("show");}
-function showModes(){
-    const urlVal=document.getElementById('videoUrl').value;
-    if(urlVal.length>5){const opts=document.getElementById('modes');opts.style.display='flex';opts.classList.add('show');}
+// قائمة اللغة
+function toggleMenu(){
+    const menu = document.getElementById("dropdownMenu");
+    menu.classList.toggle("show");
 }
-function setMode(mode){
-    document.getElementById('btnVid').classList.remove('active'); document.getElementById('btnAud').classList.remove('active');
-    document.getElementById(mode==='video'?'btnVid':'btnAud').classList.add('active');
 
-    const qSelect=document.getElementById('qualitySelect');
-    qSelect.innerHTML='<option disabled selected>جاري جلب الجودة...</option>'; qSelect.style.display='block';
-    document.getElementById('dlBtn').style.display='block'; document.getElementById('dlBtn').classList.add('show'); qSelect.classList.add('show');
-
-    // طلب للجودة من السيرفر
-    fetch('/get_qualities',{method:'POST',body:new URLSearchParams({videoUrl: document.getElementById('videoUrl').value, mode})})
-    .then(res=>res.json()).then(data=>{
-        qSelect.innerHTML='<option disabled selected>اختر الجودة...</option>';
-        data.qualities.forEach(q=>{let opt=document.createElement('option');opt.value=q;opt.innerText=q;qSelect.appendChild(opt);});
-    });
+// إظهار زر التحميل عند كتابة رابط
+function showDownloadBtn(){
+    const url = document.getElementById('videoUrl').value;
+    const btn = document.getElementById('dlBtn');
+    if(url.length > 5) btn.style.display='block', btn.classList.add('show');
+    else btn.style.display='none', btn.classList.remove('show');
 }
+
+// تغيير اللغة
 function changeLang(){
     const l=document.getElementById('langSwitcher').value;
     document.body.dir=l==='ar'?'rtl':'ltr';
@@ -213,32 +189,71 @@ function changeLang(){
     document.getElementById('subtitle').innerText=texts[l].subtitle;
     document.getElementById('dlBtn').innerText=texts[l].dl;
 }
-function showHelp(){const l=document.getElementById('langSwitcher').value;alert(texts[l].help);}
-function isValidURL(url){
-    try{const u=new URL(url); const allowed=['instagram.com','tiktok.com','youtube.com','pinterest.com','likee.video']; if(!allowed.some(d=>u.hostname.includes(d))) return false; return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}
+
+// تعليمات
+function showHelp(){
+    const l=document.getElementById('langSwitcher').value;
+    alert(texts[l].help);
 }
+
+// التحقق من الرابط
+function isValidURL(url){
+    try{
+        const u=new URL(url);
+        const allowed=['instagram.com','tiktok.com','youtube.com','pinterest.com','likee.video'];
+        if(!allowed.some(d=>u.hostname.includes(d))) return false;
+        return u.protocol==='http:'||u.protocol==='https:';
+    }catch{return false;}
+}
+
+// بدء التحميل
 function startDownload(){
     const url=document.getElementById('videoUrl').value.trim();
-    if(!url || !isValidURL(url)){alert("❌ الرابط غير مدعوم"); return;}
-    const mode=document.getElementById('btnVid').classList.contains('active')?'video':'audio';
+    if(!url || !isValidURL(url)){
+        alert("❌ الرابط غير مدعوم"); 
+        return;
+    }
     document.getElementById('loadingSpinner').style.display='block';
-    document.getElementById('dlBtn').disabled=true;
+    const btn = document.getElementById('dlBtn');
+    btn.disabled=true;
 
-    const formData=new FormData(); formData.append('videoUrl',url); formData.append('mode',mode);
+    const formData = new FormData();
+    formData.append('videoUrl', url);
 
-    fetch('/download',{method:'POST',body:formData})
-    .then(res=>{if(!res.ok)throw new Error("فشل التحميل"); return res.blob();})
-    .then(blob=>{const link=document.createElement('a');const filename=url.split('/').pop()+(mode==='audio'?'.mp3':'.mp4');link.href=window.URL.createObjectURL(blob);link.download=filename;link.click();})
+    fetch('/download', {method:'POST', body: formData})
+    .then(res=>{
+        if(!res.ok) throw new Error("فشل التحميل"); 
+        return res.blob();
+    })
+    .then(blob=>{
+        const link = document.createElement('a');
+        const filename = url.split('/').pop() + ".mp4";
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    })
     .catch(err=>alert("❌ "+err.message))
-    .finally(()=>{document.getElementById('loadingSpinner').style.display='none'; document.getElementById('dlBtn').disabled=false;});
-
+    .finally(()=>{
+        document.getElementById('loadingSpinner').style.display='none';
+        btn.disabled=false;
+    });
 }
 
-// iOS Install Prompt
-if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){document.getElementById('iosInstall').style.display='block';}
+// زر تثبيت iOS
+if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
+    const iosDiv = document.getElementById('iosInstall');
+    iosDiv.style.display='block';
+    iosDiv.addEventListener('click', ()=>alert('افتح زر المشاركة ثم اختر Add to Home Screen'));
+}
 
-// Register Service Worker
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(err=>console.log('SW failed',err));});}
+// تسجيل Service Worker
+if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+        navigator.serviceWorker.register('sw.js')
+        .then(reg=>console.log('SW registered', reg))
+        .catch(err=>console.log('SW failed', err));
+    });
+}
 </script>
 </body>
 </html>
