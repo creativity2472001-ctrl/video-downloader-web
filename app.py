@@ -11,11 +11,21 @@ app = Flask(__name__)
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# النطاقات المدعومة
+# النطاقات المدعومة لجميع المنصات
 ALLOWED_DOMAINS = [
-    "youtube.com", "youtu.be", "instagram.com", "tiktok.com",
-    "pinterest.com", "likee.video", "facebook.com", "fb.watch",
-    "x.com", "twitter.com"
+    "youtube.com", "youtu.be", "youtube-nocookie.com",
+    "tiktok.com", "vm.tiktok.com",
+    "instagram.com", "www.instagram.com", "instagr.am",
+    "facebook.com", "fb.watch", "fb.com",
+    "twitter.com", "x.com", "t.co",
+    "pinterest.com", "pin.it",
+    "likee.video", "likee.com",
+    "t.me",
+    "reddit.com", "v.redd.it",
+    "snapchat.com", "www.snapchat.com",
+    "vimeo.com",
+    "dailymotion.com", "www.dailymotion.com",
+    "twitcasting.tv"
 ]
 
 # تنظيف الملفات القديمة (أقدم من 6 ساعات)
@@ -35,9 +45,7 @@ def cleanup_old_files():
 threading.Thread(target=cleanup_old_files, daemon=True).start()
 
 def get_ydl_opts(mode, file_id):
-    # استخدام اسم ملف بسيط لتجنب مشاكل اللغة العربية في الروابط
     base_path = os.path.join(DOWNLOAD_DIR, f"{file_id}.%(ext)s")
-    
     opts = {
         'outtmpl': base_path,
         'restrictfilenames': True,
@@ -45,7 +53,7 @@ def get_ydl_opts(mode, file_id):
         'quiet': True,
         'no_warnings': True,
     }
-    
+
     if mode == "audio":
         opts.update({
             'format': 'bestaudio/best',
@@ -56,12 +64,12 @@ def get_ydl_opts(mode, file_id):
             }]
         })
     else:
-        # السر الأول: ترميز H.264 ليعمل الفيديو في استوديو الآيفون والأندرويد فوراً
+        # فيديو متوافق مع iPhone وAndroid
         opts.update({
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'merge_output_format': 'mp4',
             'postprocessor_args': [
-                '-vcodec', 'libx264', 
+                '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
                 '-acodec', 'aac'
             ],
@@ -80,17 +88,18 @@ def download():
     if not url:
         return jsonify({"error": "❌ الرابط مطلوب"}), 400
 
+    # تحقق من النطاق
+    if not any(domain in url for domain in ALLOWED_DOMAINS):
+        return jsonify({"error": "❌ هذا الرابط غير مدعوم"}), 400
+
     file_id = uuid.uuid4().hex[:8]
     try:
         ydl_opts = get_ydl_opts(mode, file_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            
-            # تحديد الامتداد النهائي
+
             ext = "mp3" if mode == "audio" else "mp4"
             filename = f"{file_id}.{ext}"
-            
-            # إنشاء رابط تحميل خارجي كامل
             download_url = url_for('get_file', filename=filename, _external=True)
 
             return jsonify({
@@ -107,7 +116,6 @@ def get_file(filename):
     if not os.path.exists(file_path):
         return "❌ الملف غير موجود", 404
 
-    # السر الثاني: إجبار المتصفح على "التنزيل" (Attachment) بدلاً من "المشاهدة"
     mimetype = "audio/mpeg" if filename.endswith(".mp3") else "video/mp4"
     
     response = make_response(send_file(
@@ -116,8 +124,6 @@ def get_file(filename):
         as_attachment=True,
         download_name=filename
     ))
-    
-    # هيدرات إضافية لضمان عمل التحميل في Safari و Chrome Mobile
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     
