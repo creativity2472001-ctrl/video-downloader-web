@@ -2,14 +2,16 @@ const CACHE_NAME = 'EasyDown-v1';
 const ASSETS = [
   '/',
   '/static/logo.png',
-  '/static/manifest.json'
+  '/static/manifest.json',
+  '/templates/index.html',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png'
 ];
 
 // 1. التثبيت: حفظ ملفات الواجهة الأساسية
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // إشعار: نستخدم 'force-cache' لضمان تحديث الملفات عند التغيير
       return cache.addAll(ASSETS);
     })
   );
@@ -28,20 +30,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. معالجة الطلبات: استثناء التحميلات + نظام (الشبكة أولاً) للواجهة
+// 3. معالجة الطلبات: استثناء التحميلات + نظام الشبكة أولاً للواجهة
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // استثناء حاسم: الروابط الحيوية لا تُلمس نهائياً
+  // استثناء التحميلات المهمة من الكاش
   if (url.pathname.includes('/download') || url.pathname.includes('/files/')) {
-    return; 
+    return;
   }
 
   event.respondWith(
-    // نحاول جلب الملف من الشبكة أولاً لتحديث الواجهة دائماً
-    fetch(event.request).catch(() => {
-      // إذا انقطع الإنترنت، نستخدم الملفات المخزنة (Offline Mode)
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .then((res) => {
+        // تحديث الكاش تلقائياً عند كل طلب ناجح
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        return res;
+      })
+      .catch(() => caches.match(event.request)) // في حال انقطاع الإنترنت
   );
 });
