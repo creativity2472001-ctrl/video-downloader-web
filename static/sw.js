@@ -5,7 +5,7 @@ const ASSETS = [
   '/static/manifest.json'
 ];
 
-// 1. التثبيت: حفظ الملفات الأساسية
+// 1. التثبيت: حفظ ملفات الواجهة فقط
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. التفعيل: تنظيف الكاش القديم
+// 2. التفعيل: تنظيف الإصدارات القديمة
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -27,14 +27,14 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. جلب البيانات: ذكاء التعامل مع الملفات الكبيرة
+// 3. معالجة الطلبات: ضمان عمل مشغل الفيديو (مثل البوت)
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // استثناء ملفات التحميل والـ API تماماً من الـ Service Worker
-  // لضمان سرعة التحميل وعدم استهلاك ذاكرة الهاتف
+  // استثناء حاسم: أي طلب يحتوي على /files/ أو /download 
+  // يجب أن يمر مباشرة للشبكة دون أي تدخل من الكاش لضمان الحفظ في الاستوديو
   if (url.pathname.includes('/download') || url.pathname.includes('/files/')) {
-    return; // اتركه يذهب للإنترنت مباشرة بدون تدخل
+    return; 
   }
 
   event.respondWith(
