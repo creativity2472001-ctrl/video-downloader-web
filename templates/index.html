@@ -6,49 +6,84 @@
     <title>EasyDown - المحمل الذكي</title>
     
     <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/logo.png">
     <meta name="theme-color" content="#007bff">
 
     <style>
-        :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
-        .card { background: rgba(255,255,255,0.98); width: 90%; max-width: 450px; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; position: relative; }
+        /* الهيدر العلوي */
+        .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand img { width: 35px; height: 35px; border-radius: 8px; }
+        .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
         
-        .header-menu { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; }
-        .lang-select { border: none; background: #fff; border-radius: 5px; padding: 5px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .pwa-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; }
+        .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; }
 
+        /* القائمة الجانبية */
+        .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; }
+        .sidebar.active { right: 0; }
+        .close-sidebar { font-size: 24px; cursor: pointer; color: #888; display: block; margin-bottom: 20px; }
+
+        /* الكرت الرئيسي */
+        .card { background: rgba(255,255,255,0.98); width: 92%; max-width: 450px; padding: 40px 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
+        
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
-        input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        
+        input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; }
         input.invalid { border-color: var(--danger); }
 
         .modes { display: flex; gap: 10px; margin: 20px 0; }
-        .modes button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #eee; font-weight: bold; }
+        .modes button { flex: 1; padding: 12px; border: none; border-radius: 12px; cursor: pointer; background: #eee; font-weight: bold; transition: 0.3s; }
         .modes button.active { background: var(--primary); color: white; }
-        .main-btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
-        .cancel-btn { width: 100%; padding: 10px; background: none; color: var(--danger); border: 1px solid var(--danger); border-radius: 12px; cursor: pointer; display: none; margin-top: 10px; }
-        .retry-btn { width: 100%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 12px; display: none; margin-top: 10px; cursor: pointer; }
         
-        #finalDownload { display: none; margin-top: 15px; padding: 15px; background: #e9f7ef; border: 1px solid var(--success); border-radius: 12px; }
+        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
+        .cancel-btn { width: 100%; padding: 12px; background: none; color: var(--danger); border: 1px solid var(--danger); border-radius: 12px; cursor: pointer; display: none; margin-top: 10px; }
+        .retry-btn { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; display: none; margin-top: 10px; cursor: pointer; }
+        
+        #finalDownload { display: none; margin-top: 15px; padding: 20px; background: #e9f7ef; border: 1px solid var(--success); border-radius: 15px; }
         #finalDownload a { color: var(--success); text-decoration: none; font-weight: bold; font-size: 18px; }
 
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; animation: slideUp 0.3s; }
-        #adArea { display: none; margin-top: 15px; border-radius: 12px; background: #fdfdfd; padding: 10px; border: 1px dashed #ccc; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; }
         .status-text { font-size: 14px; color: var(--primary); margin-top: 5px; display: none; font-weight: bold; }
-        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+
+        /* ستايل المساعدة داخل المنيو */
+        .help-box { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-top: 20px; text-align: right; font-size: 14px; color: #555; line-height: 1.6; }
+        .lang-btn { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+
+        [dir="ltr"] .sidebar { right: auto; left: -300px; }
+        [dir="ltr"] .sidebar.active { left: 0; right: auto; }
     </style>
 </head>
 <body>
 
 <div id="toast"></div>
 
-<div class="header-menu">
-    <select class="lang-select" id="langSwitch" onchange="updateLang()">
-        <option value="ar">العربية</option>
-        <option value="en">English</option>
-    </select>
-    <span style="font-size: 12px; color: #666;">EasyDown v4.0</span>
-</div>
+<header class="app-header">
+    <div class="brand">
+        <img src="/static/logo.png" alt="Logo">
+        <span>EasyDown</span>
+    </div>
+    <div class="header-actions">
+        <button id="pwaInstall" class="pwa-btn" title="تثبيت التطبيق">📲</button>
+        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+    </div>
+</header>
+
+<aside class="sidebar" id="sidebar">
+    <span class="close-sidebar" onclick="toggleSidebar()">✕</span>
+    <h3 id="txt-menu-title">القائمة</h3>
+    
+    <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
+    <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
+
+    <div class="help-box" id="help-content">
+        </div>
+</aside>
 
 <div class="card">
     <h1 id="txt-title">EasyDown</h1>
@@ -66,11 +101,6 @@
     </div>
     <div class="status-text" id="statusTxt"></div>
 
-    <div id="adArea">
-        <p style="font-size: 10px; color: #999;" id="txt-ad">إعلان ممول</p>
-        <div style="height: 100px; display: flex; align-items: center; justify-content: center; color: #bbb; background: #f1f1f1; border-radius: 8px;">[ Ad Slot ]</div>
-    </div>
-
     <div id="finalDownload">
         <a href="#" id="downloadLink" download>📥 <span id="txt-dl-ready">اضغط هنا للتحميل</span></a>
     </div>
@@ -82,31 +112,30 @@
 
 <script>
     let currentMode = 'video';
+    let currentLang = 'ar';
     let progressInterval;
+    let deferredPrompt;
     const allowedDomains = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'pinterest.com', 'likee.video'];
 
     const dict = {
-        ar: { title: "EasyDown", sub: "أدخل الرابط لنبدأ المعالجة", placeholder: "الصق الرابط هنا...", dl: "تحميل الآن", cancel: "إلغاء العملية", error: "⚠️ رابط غير مدعوم", processing: "جاري المعالجة...", done: "✅ تم التجهيز!", failed: "❌ فشل التحميل", canceled: "تم الإلغاء", retry: "إعادة المحاولة", dlReady: "اضغط هنا للتحميل", ad: "إعلان ممول" },
-        en: { title: "EasyDown", sub: "Enter link to start", placeholder: "Paste link here...", dl: "Download Now", cancel: "Cancel", error: "⚠️ Unsupported link", processing: "Processing...", done: "✅ Ready!", failed: "❌ Processing failed", canceled: "Canceled", retry: "Retry", dlReady: "Click here to Download", ad: "Sponsored" }
+        ar: { 
+            title: "EasyDown", sub: "أدخل الرابط لنبدأ المعالجة", placeholder: "الصق الرابط هنا...", dl: "تحميل الآن", cancel: "إلغاء العملية", 
+            processing: "جاري المعالجة...", done: "✅ تم التجهيز!", failed: "❌ فشل التحميل", canceled: "تم الإلغاء", retry: "إعادة المحاولة", 
+            dlReady: "اضغط هنا للتحميل", menu: "القائمة",
+            help: "📖 <b>تعليمات التنزيل:</b><br>1. انسخ رابط الفيديو من التطبيق.<br>2. الصقه في المربع بالأعلى.<br>3. اختر (فيديو) أو (صوت) ثم اضغط تحميل."
+        },
+        en: { 
+            title: "EasyDown", sub: "Enter link to start", placeholder: "Paste link here...", dl: "Download Now", cancel: "Cancel", 
+            processing: "Processing...", done: "✅ Ready!", failed: "❌ Failed", canceled: "Canceled", retry: "Retry", 
+            dlReady: "Click here to Download", menu: "Menu",
+            help: "📖 <b>How to Download:</b><br>1. Copy video link from the app.<br>2. Paste it in the box above.<br>3. Select (Video) or (Audio) and click Download."
+        }
     };
 
-    // تسجيل الـ Service Worker للـ PWA
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Failed', err));
-        });
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
 
-    function showToast(msg, type = 'info') {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.style.background = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : '#333');
-        t.style.display = 'block';
-        setTimeout(() => { t.style.display = 'none'; }, 3000);
-    }
-
-    function updateLang() {
-        const l = document.getElementById('langSwitch').value;
+    function updateLang(l) {
+        currentLang = l;
         document.body.dir = l === 'ar' ? 'rtl' : 'ltr';
         document.getElementById('txt-title').innerText = dict[l].title;
         document.getElementById('txt-sub').innerText = dict[l].sub;
@@ -115,7 +144,9 @@
         document.getElementById('cancelBtn').innerText = dict[l].cancel;
         document.getElementById('retryBtn').innerText = dict[l].retry;
         document.getElementById('txt-dl-ready').innerText = dict[l].dlReady;
-        document.getElementById('txt-ad').innerText = dict[l].ad;
+        document.getElementById('txt-menu-title').innerText = dict[l].menu;
+        document.getElementById('help-content').innerHTML = dict[l].help;
+        if(l === 'ar') toggleSidebar();
     }
 
     function validateInput() {
@@ -133,73 +164,72 @@
     }
 
     async function startProcess() {
-        const l = document.getElementById('langSwitch').value;
         const url = document.getElementById('videoUrl').value.trim();
-
-        // UI Setup
         document.getElementById('dlBtn').style.display = 'none';
         document.getElementById('retryBtn').style.display = 'none';
         document.getElementById('finalDownload').style.display = 'none';
         document.getElementById('cancelBtn').style.display = 'block';
-        document.getElementById('adArea').style.display = 'block';
         document.getElementById('pContainer').style.display = 'block';
         document.getElementById('statusTxt').style.display = 'block';
-        document.getElementById('statusTxt').style.color = 'var(--primary)';
         document.getElementById('videoUrl').disabled = true;
 
-        // Fake Progress Bar Logic
         let progress = 0;
         let pBar = document.getElementById('pBar');
-        pBar.style.width = '0%';
         progressInterval = setInterval(() => {
             if (progress < 90) progress += Math.random() * 5;
             pBar.style.width = progress + '%';
-            document.getElementById('statusTxt').innerText = `${dict[l].processing} ${Math.round(progress)}%`;
+            document.getElementById('statusTxt').innerText = `${dict[currentLang].processing} ${Math.round(progress)}%`;
         }, 500);
 
         try {
-            // الطلب الحقيقي للسيرفر
             const response = await fetch('/download', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: url, mode: currentMode })
             });
-
             const result = await response.json();
             clearInterval(progressInterval);
 
             if (response.ok) {
                 pBar.style.width = '100%';
-                document.getElementById('statusTxt').innerText = dict[l].done;
-                showToast(dict[l].done, 'success');
+                document.getElementById('statusTxt').innerText = dict[currentLang].done;
                 document.getElementById('finalDownload').style.display = 'block';
                 document.getElementById('downloadLink').href = result.download_url;
                 document.getElementById('cancelBtn').style.display = 'none';
-            } else {
-                throw new Error(result.error);
-            }
+            } else { throw new Error(result.error); }
         } catch (err) {
             clearInterval(progressInterval);
-            document.getElementById('statusTxt').innerText = dict[l].failed;
-            document.getElementById('statusTxt').style.color = 'var(--danger)';
-            showToast(dict[l].failed, 'error');
+            document.getElementById('statusTxt').innerText = dict[currentLang].failed;
             document.getElementById('retryBtn').style.display = 'block';
             document.getElementById('cancelBtn').style.display = 'none';
         }
     }
 
     function cancelProcess() {
-        const l = document.getElementById('langSwitch').value;
         if (progressInterval) clearInterval(progressInterval);
-        document.getElementById('pContainer').style.display = 'none';
-        document.getElementById('statusTxt').style.display = 'none';
-        document.getElementById('adArea').style.display = 'none';
-        document.getElementById('cancelBtn').style.display = 'none';
-        document.getElementById('dlBtn').style.display = 'block';
-        document.getElementById('videoUrl').disabled = false;
-        document.getElementById('pBar').style.width = '0%';
-        showToast(dict[l].canceled, 'info');
+        location.reload(); // أسرع طريقة للإلغاء وتصفير الحالة
     }
+
+    // منطق الـ PWA
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('pwaInstall').style.display = 'block';
+    });
+
+    document.getElementById('pwaInstall').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+            document.getElementById('pwaInstall').style.display = 'none';
+        }
+    });
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+    }
+
+    updateLang('ar');
 </script>
 </body>
 </html>
