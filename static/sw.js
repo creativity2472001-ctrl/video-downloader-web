@@ -5,18 +5,17 @@ const ASSETS = [
   '/static/manifest.json'
 ];
 
-// 1. مرحلة التثبيت: حفظ الملفات الأساسية في الكاش
+// 1. التثبيت: حفظ الملفات الأساسية
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching assets...');
       return cache.addAll(ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// 2. مرحلة التفعيل: مسح الكاش القديم إذا وجد
+// 2. التفعيل: تنظيف الكاش القديم
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -28,11 +27,14 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. استراتيجية (Network First): جلب الجديد من الإنترنت، وإذا انقطع، استخدم الكاش
+// 3. جلب البيانات: ذكاء التعامل مع الملفات الكبيرة
 self.addEventListener('fetch', (event) => {
-  // لا نريد تخزين عمليات التحميل (فقط واجهة التطبيق)
-  if (event.request.url.includes('/download')) {
-    return; 
+  const url = new URL(event.request.url);
+
+  // استثناء ملفات التحميل والـ API تماماً من الـ Service Worker
+  // لضمان سرعة التحميل وعدم استهلاك ذاكرة الهاتف
+  if (url.pathname.includes('/download') || url.pathname.includes('/files/')) {
+    return; // اتركه يذهب للإنترنت مباشرة بدون تدخل
   }
 
   event.respondWith(
