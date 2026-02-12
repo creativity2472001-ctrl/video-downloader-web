@@ -6,15 +6,70 @@
     <title>EasyDown - المحمل الذكي</title>
     <style>
         :root { --primary: #007bff; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; width: 90%; max-width: 500px; padding: 30px; border-radius: 20px; shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 20px; }
-        .options { display: none; margin-top: 20px; gap: 10px; justify-content: center; }
-        .btn-opt { padding: 15px 25px; border: 1px solid var(--primary); background: white; border-radius: 10px; cursor: pointer; transition: 0.3s; }
-        .btn-opt.active { background: var(--primary); color: white; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg) url("/static/logo.png") no-repeat center center;
+            background-size: 200px 200px; /* حجم الشعار */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.95);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: none;
+            margin-top: 20px;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-opt {
+            padding: 15px 25px;
+            border: 1px solid var(--primary);
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-opt.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .header-links {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
         select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px; border: 1px solid #ccc; display: none; }
-        .header-links { position: absolute; top: 20px; right: 20px; left: 20px; display: flex; justify-content: space-between; }
-        .hidden { display: none; }
+
     </style>
 </head>
 <body>
@@ -49,8 +104,8 @@
 
 <script>
     const texts = {
-        ar: { title: "EasyDown", subtitle: "أدخل الرابط لنبدأ السحر", qVid: ["1080p (Full HD)", "720p (HD)", "480p"], qAud: ["320kbps (High)", "192kbps (Medium)", "128kbps (Basic)"], dl: "تحميل الآن" },
-        en: { title: "EasyDown", subtitle: "Paste link to start magic", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"], dl: "Download Now" }
+        ar: { title: "EasyDown", subtitle: "أدخل الرابط لنبدأ السحر", dl: "تحميل الآن", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"] },
+        en: { title: "EasyDown", subtitle: "Paste link to start magic", dl: "Download Now", qVid: ["1080p", "720p", "480p"], qAud: ["320kbps", "192kbps", "128kbps"] }
     };
 
     function showModes() {
@@ -63,18 +118,16 @@
         document.getElementById('btnVid').classList.remove('active');
         document.getElementById('btnAud').classList.remove('active');
         document.getElementById(mode === 'video' ? 'btnVid' : 'btnAud').classList.add('active');
-        
+
         const qSelect = document.getElementById('qualitySelect');
         const lang = document.getElementById('langSwitcher').value;
-        qSelect.innerHTML = '<option disabled selected>Choose Quality...</option>';
-        
+        qSelect.innerHTML = '<option disabled selected>اختر الجودة...</option>';
         const list = mode === 'video' ? texts[lang].qVid : texts[lang].qAud;
         list.forEach(q => {
             let opt = document.createElement('option');
             opt.value = q; opt.innerText = q;
             qSelect.appendChild(opt);
         });
-        
         qSelect.style.display = 'block';
         document.getElementById('dlBtn').style.display = 'block';
     }
@@ -92,8 +145,30 @@
     }
 
     function startDownload() {
-        alert("جاري التحميل... (هنا نربط مع الباكيند)");
+        const url = document.getElementById('videoUrl').value;
+        const mode = document.getElementById('btnVid').classList.contains('active') ? 'video' : 'audio';
+
+        if (!url) { alert("❌ الرجاء إدخال رابط الفيديو"); return; }
+
+        const formData = new FormData();
+        formData.append('videoUrl', url);
+        formData.append('mode', mode);
+
+        fetch('/download', { method: 'POST', body: formData })
+        .then(response => {
+            if (!response.ok) throw new Error("فشل التحميل");
+            return response.blob();
+        })
+        .then(blob => {
+            const link = document.createElement('a');
+            const filename = url.split('/').pop() + (mode === 'audio' ? '.mp3' : '.mp4');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        })
+        .catch(err => alert("❌ " + err.message));
     }
 </script>
+
 </body>
 </html>
