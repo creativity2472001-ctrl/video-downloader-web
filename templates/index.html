@@ -11,25 +11,28 @@
     <meta name="theme-color" content="#007bff">
 
     <style>
-        :root { --primary: #007bff; --danger: #dc3545; --success: #28a745; --bg: #f4f7f6; }
+        :root { --primary: #007bff; --bg: #f4f7f6; --text: #333; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
-        /* الهيدر مع زر التثبيت */
         .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
         .brand { display: flex; align-items: center; gap: 10px; }
         .brand img { width: 35px; height: 35px; border-radius: 8px; }
         .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .install-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; outline: none; padding: 0; }
+        .install-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; outline: none; padding: 0; animation: bounce 2s infinite; }
         .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; user-select: none; }
 
-        .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; }
+        /* السايد بار المطور */
+        .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; overflow-y: auto; }
         .sidebar.active { right: 0; visibility: visible; }
         .close-sidebar { font-size: 24px; cursor: pointer; color: #888; display: block; margin-bottom: 20px; text-align: left; }
 
+        .help-section { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-top: 20px; text-align: right; border-right: 4px solid var(--primary); }
+        .help-section h4 { margin: 0 0 10px 0; color: var(--primary); font-size: 16px; }
+        .help-section p { font-size: 13px; color: #555; line-height: 1.6; margin: 5px 0; }
+
         .card { background: rgba(255,255,255,0.98); width: 92%; max-width: 450px; padding: 40px 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; z-index: 10; }
-        
         input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; margin-bottom: 15px; }
         
         .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -37,14 +40,14 @@
         .mode-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0,123,255,0.05); }
 
         .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
-        
-        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; text-align: right; }
+        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; text-align: center; }
 
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
-        
         .status-msg { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 5px; }
-        .lang-btn { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+        
+        .lang-btn { width: 48%; padding: 10px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     </style>
 </head>
 <body>
@@ -55,7 +58,7 @@
         <span>EasyDown</span>
     </div>
     <div class="header-actions">
-        <button id="pwaInstall" class="install-btn" title="تثبيت التطبيق">📲</button>
+        <button id="pwaInstall" class="install-btn">📲</button>
         <div class="menu-btn" onclick="toggleSidebar()">☰</div>
     </div>
 </header>
@@ -63,9 +66,26 @@
 <aside class="sidebar" id="sidebar">
     <span class="close-sidebar" onclick="toggleSidebar()">✕</span>
     <h3 id="txt-menu-title">القائمة</h3>
-    <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
-    <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
-    <div id="install-instructions" style="margin-top:20px; font-size:14px; color:#666;"></div>
+    <div style="display: flex; justify-content: space-between;">
+        <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
+        <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
+    </div>
+
+    <div class="help-section">
+        <h4 id="h-guide">📖 دليل الاستخدام</h4>
+        <p id="p-guide">انسخ رابط الفيديو من (TikTok, Instagram, YouTube)، الصقه في المربع، واضغط تحميل.</p>
+    </div>
+
+    <div class="help-section">
+        <h4 id="h-install">📲 تثبيت التطبيق</h4>
+        <p id="p-install-ios"><b>للآيفون:</b> اضغط على زر المشاركة 📤 ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
+        <p id="p-install-and"><b>للأندرويد:</b> اضغط على زر 📲 بجانب القائمة أو (⋮) في المتصفح ثم "تثبيت".</p>
+    </div>
+
+    <div class="help-section" style="border-color: #ffc107; background: #fff9e6;">
+        <h4 id="h-iphone">⚠️ لمستخدمي الآيفون</h4>
+        <p id="p-iphone-tip">بعد فتح الفيديو، اضغط على زر المشاركة 📤 ثم اختر 'حفظ الفيديو' 📥 ليرسل للاستوديو مباشرة.</p>
+    </div>
 </aside>
 
 <div class="card">
@@ -82,7 +102,7 @@
     <div id="ad-box">
         <small style="color:#856404">إعلان ممول</small>
         <div style="height:60px; display:flex; align-items:center; justify-content:center; color:#666; font-size:13px;">
-            يتم الآن تجهيز الملف.. شكراً لانتظارك
+            مساحة إعلانية - يرجى الانتظار ثوانٍ
         </div>
     </div>
 
@@ -100,11 +120,11 @@
     const dict = {
         ar: { 
             title: "EasyDown", sub: "أدخل الرابط لنبدأ", dl: "تحميل الآن", menu: "القائمة",
-            ios: "📱 للتثبيت: اضغط زر 'المشاركة' ثم 'إضافة إلى الشاشة الرئيسية'."
+            ready: "✅ جاهز! جاري الفتح..."
         },
         en: { 
             title: "EasyDown", sub: "Paste link to start", dl: "Download Now", menu: "Menu",
-            ios: "📱 To Install: Tap 'Share' then 'Add to Home Screen'."
+            ready: "✅ Ready! Opening..."
         }
     };
 
@@ -123,8 +143,6 @@
         document.getElementById('txt-sub').innerText = dict[l].sub;
         document.getElementById('dlBtn').innerText = dict[l].dl;
         document.getElementById('txt-menu-title').innerText = dict[l].menu;
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        document.getElementById('install-instructions').innerText = isIOS ? dict[l].ios : "";
     }
 
     function validateInput() {
@@ -159,12 +177,24 @@
 
             if (response.ok) {
                 bar.style.width = '100%';
-                st.innerText = currentLang === 'ar' ? "✅ جاهز! جاري الفتح..." : "✅ Ready! Opening...";
+                st.innerText = dict[currentLang].ready;
                 
-                // الفتح التلقائي لضمان حفظ الفيديو في الاستوديو (مثل البوت)
-                setTimeout(() => {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                if (isIOS) {
+                    // آيفون: فتح مباشر للسماح بحفظ الفيديو في الاستوديو
                     window.location.href = result.download_url;
-                }, 1000);
+                } else {
+                    // أندرويد وكمبيوتر: تحميل فوري
+                    const link = document.createElement('a');
+                    link.href = result.download_url;
+                    link.setAttribute('download', '');
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }
+                
+                setTimeout(() => { location.reload(); }, 6000);
             } else {
                 alert(result.error);
                 location.reload();
@@ -187,15 +217,12 @@
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                document.getElementById('pwaInstall').style.display = 'none';
-            }
+            if (outcome === 'accepted') document.getElementById('pwaInstall').style.display = 'none';
             deferredPrompt = null;
         }
     });
 
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
-    
     window.onload = () => { updateLang('ar'); };
 </script>
 </body>
