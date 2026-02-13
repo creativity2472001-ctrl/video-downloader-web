@@ -92,6 +92,7 @@ def download():
         return jsonify({"error": "❌ هذا الرابط غير مدعوم"}), 400
 
     file_id = uuid.uuid4().hex[:8]
+
     try:
         ydl_opts = get_ydl_opts(mode, file_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -106,12 +107,15 @@ def download():
             "download_url": download_url,
             "title": info.get('title', 'MixMediaApp File')
         })
+
     except Exception as e:
         return jsonify({"error": f"❌ فشل السيرفر: {str(e)}"}), 500
+
 
 @app.route("/files/<filename>")
 def get_file(filename):
     file_path = os.path.join(DOWNLOAD_DIR, filename)
+
     if not os.path.exists(file_path):
         return "❌ الملف غير موجود", 404
 
@@ -122,15 +126,17 @@ def get_file(filename):
         mimetype=mimetype
     ))
 
-    # iOS: inline لتمكين Share → Save Video
+    # iOS: inline لتمكين Share → Save
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
 
     return response
 
+
 @app.route("/sw.js")
 def sw():
     return app.send_static_file("sw.js")
 
+
 if name == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
