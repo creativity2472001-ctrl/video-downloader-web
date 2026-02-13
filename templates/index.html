@@ -1,67 +1,45 @@
-round(p)}%`:`Processing... ${Math.round(p)}%`;
-    },500);
+const response = await fetch('/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+const result = await response.json();
+clearInterval(itv);
 
-    try{
-        const response = await fetch('/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
-        const result = await response.json();
-        clearInterval(itv);
-        if(response.ok){
-            bar.style.width='100%';
-            st.innerText = currentLang==='ar'?'جاهز للتحميل':'Ready';
-            
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if(isIOS){
-                // iOS → فتح الفيديو في تبويب جديد ليتم Share → Save
-                window.open(result.download_url,'_blank');
-            } else {
-                // Android/Desktop → تحميل مباشر
-                const link = document.createElement('a');
-                link.href = result.download_url;
-                link.setAttribute('download','');
-                link.target='_blank';
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-            }
+if(response.ok){
+bar.style.width='100%';
+st.innerText=dict[currentLang].ready;
 
-            setTimeout(()=>{st.innerText = currentLang==='ar'?'تأكد من حفظ الملف':'Check your download';},2000);
-            setTimeout(()=>{location.reload();},7000);
-        } else {
-            alert(result.error);
-            location.reload();
-        }
-    }catch(e){
-        clearInterval(itv);
-        alert("Connection Error");
-        location.reload();
-    }
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+if(isIOS){window.open(result.download_url,'_blank');}
+else{
+const link=document.createElement('a');
+link.href=result.download_url;
+link.setAttribute('download','');
+link.target='_blank';
+document.body.appendChild(link);link.click();link.remove();
+}
+
+setTimeout(()=>{st.innerText=dict[currentLang].check;},2000);
+setTimeout(()=>{location.reload();},7000);
+}else{alert(result.error);location.reload();}
+}catch(e){clearInterval(itv);alert("Connection Error");location.reload();}
 }
 
 // PWA Install
-window.addEventListener('beforeinstallprompt', (e)=>{
-    e.preventDefault();
-    deferredPrompt = e;
-    if(/iPad|iPhone|iPod|Android/.test(navigator.userAgent)){
-        document.getElementById('pwaInstall').style.display='inline-block';
-    }
+window.addEventListener('beforeinstallprompt',(e)=>{
+e.preventDefault();
+deferredPrompt=e;
+if(/iPad|iPhone|iPod|Android/.test(navigator.userAgent)){document.getElementById('pwaInstall').style.display='inline-block';}
 });
 
-document.getElementById('pwaInstall').addEventListener('click', async ()=>{
-    if(deferredPrompt){
-        deferredPrompt.prompt();
-        const {outcome} = await deferredPrompt.userChoice;
-        if(outcome==='accepted') document.getElementById('pwaInstall').style.display='none';
-        deferredPrompt=null;
-    }
+document.getElementById('pwaInstall').addEventListener('click',async()=>{
+if(deferredPrompt){deferredPrompt.prompt();
+const {outcome}=await deferredPrompt.userChoice;
+if(outcome==='accepted')document.getElementById('pwaInstall').style.display='none';
+deferredPrompt=null;}
 });
 
-if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/static/sw.js').catch(err=>console.log("SW error:",err));
-}
-
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(err=>console.log("SW error:",err));}
 window.onload=()=>{updateLang('ar');};
-
-document.getElementById('downloadBtn').addEventListener('click', startProcess);
+document.getElementById('dlBtn').addEventListener('click',startProcess);
 </script>
+
 </body>
 </html>
