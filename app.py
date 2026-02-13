@@ -7,11 +7,11 @@ import threading
 
 app = Flask(__name__)
 
-# مجلد التحميلات
+# 1. إعدادات المجلدات
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# النطاقات المدعومة لجميع المنصات
+# 2. النطاقات المدعومة
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be", "youtube-nocookie.com",
     "tiktok.com", "vm.tiktok.com",
@@ -20,30 +20,25 @@ ALLOWED_DOMAINS = [
     "twitter.com", "x.com", "t.co",
     "pinterest.com", "pin.it",
     "likee.video", "likee.com",
-    "t.me",
-    "reddit.com", "v.redd.it",
+    "t.me", "reddit.com", "v.redd.it",
     "snapchat.com", "www.snapchat.com",
-    "vimeo.com",
-    "dailymotion.com", "www.dailymotion.com",
-    "twitcasting.tv"
+    "vimeo.com", "dailymotion.com", "twitcasting.tv"
 ]
 
-# تنظيف الملفات القديمة (أقدم من 6 ساعات)
+# 3. تنظيف الملفات (كل 30 دقيقة يحذف ما زاد عن 6 ساعات)
 def cleanup_old_files():
     while True:
         now = time.time()
         for f in os.listdir(DOWNLOAD_DIR):
             f_path = os.path.join(DOWNLOAD_DIR, f)
-            if os.path.isfile(f_path):
-                if os.stat(f_path).st_mtime < now - 6*3600:
-                    try:
-                        os.remove(f_path)
-                    except:
-                        pass
+            if os.path.isfile(f_path) and os.stat(f_path).st_mtime < now - 6*3600:
+                try: os.remove(f_path)
+                except: pass
         time.sleep(1800)
 
 threading.Thread(target=cleanup_old_files, daemon=True).start()
 
+# 4. إعدادات التحميل (الترميز الذهبي للاستوديو)
 def get_ydl_opts(mode, file_id):
     base_path = os.path.join(DOWNLOAD_DIR, f"{file_id}.%(ext)s")
     opts = {
@@ -64,6 +59,7 @@ def get_ydl_opts(mode, file_id):
             }]
         })
     else:
+        # ترميز libx264 لضمان عمل الفيديو في "صور" الآيفون والأندرويد
         opts.update({
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'merge_output_format': 'mp4',
@@ -75,6 +71,7 @@ def get_ydl_opts(mode, file_id):
         })
     return opts
 
+# 5. المسارات (Routes)
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -100,43 +97,42 @@ def download():
 
         ext = "mp3" if mode == "audio" else "mp4"
         filename = f"{file_id}.{ext}"
+        # توليد رابط مباشر للملف
         download_url = url_for('get_file', filename=filename, _external=True)
 
         return jsonify({
             "status": "success",
             "download_url": download_url,
-            "title": info.get('title', 'MixMediaApp File')
+            "title": info.get('title', 'EasyDown File')
         })
-
     except Exception as e:
         return jsonify({"error": f"❌ فشل السيرفر: {str(e)}"}), 500
-
 
 @app.route("/files/<filename>")
 def get_file(filename):
     file_path = os.path.join(DOWNLOAD_DIR, filename)
-
     if not os.path.exists(file_path):
         return "❌ الملف غير موجود", 404
 
     mimetype = "audio/mpeg" if filename.endswith(".mp3") else "video/mp4"
 
+    # استخدام as_attachment لإجبار المتصفح على التحميل بدلاً من المعاينة
     response = make_response(send_file(
         file_path,
-        mimetype=mimetype
+        mimetype=mimetype,
+        as_attachment=True,
+        download_name=filename
     ))
 
-    # iOS: inline لتمكين Share → Save
-    response.headers["Content-Disposition"] = f"inline; filename={filename}"
+    # هيدرات الحماية والتوافق
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
-
     return response
-
 
 @app.route("/sw.js")
 def sw():
     return app.send_static_file("sw.js")
 
-
-if name == "__main__":
+# التشغيل النهائي
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
