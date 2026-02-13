@@ -88,7 +88,6 @@ def download():
     if not url:
         return jsonify({"error": "❌ الرابط مطلوب"}), 400
 
-    # تحقق من النطاق
     if not any(domain in url for domain in ALLOWED_DOMAINS):
         return jsonify({"error": "❌ هذا الرابط غير مدعوم"}), 400
 
@@ -117,16 +116,16 @@ def get_file(filename):
         return "❌ الملف غير موجود", 404
 
     mimetype = "audio/mpeg" if filename.endswith(".mp3") else "video/mp4"
-    
+
     response = make_response(send_file(
         file_path,
-        mimetype=mimetype,
-        as_attachment=True,
-        download_name=filename
+        mimetype=mimetype
     ))
-    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+
+    # تعديل رئيسي: استخدام inline عشان iPhone يحفظ الفيديو مباشرة على الاستوديو
+    response.headers["Content-Disposition"] = f"inline; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    
+
     return response
 
 @app.route("/sw.js")
