@@ -64,7 +64,6 @@ def get_ydl_opts(mode, file_id):
             }]
         })
     else:
-        # فيديو متوافق مع iPhone وAndroid
         opts.update({
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'merge_output_format': 'mp4',
@@ -83,7 +82,8 @@ def index():
 @app.route("/download", methods=["POST"])
 def download():
     data = request.get_json()
-    url, mode = data.get("url"), data.get("mode", "video")
+    url = data.get("url")
+    mode = data.get("mode", "video")
 
     if not url:
         return jsonify({"error": "❌ الرابط مطلوب"}), 400
@@ -97,15 +97,15 @@ def download():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-            ext = "mp3" if mode == "audio" else "mp4"
-            filename = f"{file_id}.{ext}"
-            download_url = url_for('get_file', filename=filename, _external=True)
+        ext = "mp3" if mode == "audio" else "mp4"
+        filename = f"{file_id}.{ext}"
+        download_url = url_for('get_file', filename=filename, _external=True)
 
-            return jsonify({
-                "status": "success",
-                "download_url": download_url,
-                "title": info.get('title', 'EasyDown File')
-            })
+        return jsonify({
+            "status": "success",
+            "download_url": download_url,
+            "title": info.get('title', 'MixMediaApp File')
+        })
     except Exception as e:
         return jsonify({"error": f"❌ فشل السيرفر: {str(e)}"}), 500
 
@@ -122,7 +122,7 @@ def get_file(filename):
         mimetype=mimetype
     ))
 
-    # تعديل رئيسي: استخدام inline عشان iPhone يحفظ الفيديو مباشرة على الاستوديو
+    # iOS: inline لتمكين Share → Save Video
     response.headers["Content-Disposition"] = f"inline; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
 
@@ -132,5 +132,5 @@ def get_file(filename):
 def sw():
     return app.send_static_file("sw.js")
 
-if __name__ == "__main__":
+if name == "__main__":
     app.run(host="0.0.0.0", port=5000)
