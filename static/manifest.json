@@ -1,7 +1,7 @@
 {
-  "name": "MixMediaApp - المحمل الذكي",
-  "short_name": "MixMedia",
-  "description": "تحميل الفيديوهات والصوت من جميع المنصات بدون علامة مائية. Download videos & audio from all platforms easily.",
+  "name": "EasyDown - المحمل الذكي",
+  "short_name": "EasyDown",
+  "description": "تحميل الفيديوهات والصوت من جميع المنصات مباشرة إلى جهازك بدون تعقيد. Download videos & audio from all platforms easily.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -24,6 +24,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/static/logo-apple.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
@@ -32,7 +38,7 @@
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "واجهة تطبيق MixMediaApp"
+      "label": "واجهة تطبيق EasyDown"
     }
   ],
   "prefer_related_applications": false,
