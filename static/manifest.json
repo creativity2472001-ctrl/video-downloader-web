@@ -1,26 +1,26 @@
 {
-  "name": "EasyDown - المحمل الذكي",
-  "short_name": "EasyDown",
-  "description": "تحميل الفيديوهات من Instagram, TikTok, YouTube و أكثر بدون علامة مائية.",
+  "name": "MixMediaApp - المحمل الذكي",
+  "short_name": "MixMedia",
+  "description": "تحميل الفيديوهات والصوت من جميع المنصات بدون علامة مائية. Download videos & audio from all platforms easily.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "minimal-ui"],
   "background_color": "#f4f7f6",
-  "theme_color": "#007bff",
+  "theme_color": "#4CAF50",
   "orientation": "portrait",
-  "dir": "rtl",
+  "dir": "ltr",
   "lang": "ar",
   "categories": ["productivity", "video", "utilities"],
   "icons": [
     {
-      "src": "/static/icons/icon-192.png",
+      "src": "/static/logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/static/icons/icon-512.png",
+      "src": "/static/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -32,7 +32,7 @@
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "واجهة تطبيق EasyDown"
+      "label": "واجهة تطبيق MixMediaApp"
     }
   ],
   "prefer_related_applications": false,
