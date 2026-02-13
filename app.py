@@ -4,14 +4,20 @@ import yt_dlp
 import uuid
 import time
 import threading
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 
+# ---------------------------
 # 1. إعدادات المجلدات
+# ---------------------------
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
+# ---------------------------
 # 2. النطاقات المدعومة
+# ---------------------------
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be", "youtube-nocookie.com",
     "tiktok.com", "vm.tiktok.com",
@@ -25,7 +31,9 @@ ALLOWED_DOMAINS = [
     "vimeo.com", "dailymotion.com", "twitcasting.tv"
 ]
 
-# 3. تنظيف الملفات (كل 30 دقيقة يحذف ما زاد عن 6 ساعات)
+# ---------------------------
+# 3. تنظيف الملفات القديمة كل 30 دقيقة (أكثر من 6 ساعات)
+# ---------------------------
 def cleanup_old_files():
     while True:
         now = time.time()
@@ -38,7 +46,9 @@ def cleanup_old_files():
 
 threading.Thread(target=cleanup_old_files, daemon=True).start()
 
-# 4. إعدادات التحميل (الترميز الذهبي للاستوديو)
+# ---------------------------
+# 4. إعدادات yt-dlp للتحميل
+# ---------------------------
 def get_ydl_opts(mode, file_id):
     base_path = os.path.join(DOWNLOAD_DIR, f"{file_id}.%(ext)s")
     opts = {
@@ -59,7 +69,6 @@ def get_ydl_opts(mode, file_id):
             }]
         })
     else:
-        # ترميز libx264 لضمان عمل الفيديو في "صور" الآيفون والأندرويد
         opts.update({
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'merge_output_format': 'mp4',
@@ -71,7 +80,36 @@ def get_ydl_opts(mode, file_id):
         })
     return opts
 
-# 5. المسارات (Routes)
+# ---------------------------
+# 5. تتبع المستخدمين والفيديو اليومي
+# ---------------------------
+USERS_FILE = "users.json"
+
+def load_users():
+    if not os.path.exists(USERS_FILE):
+        return {}
+    with open(USERS_FILE, "r") as f:
+        return json.load(f)
+
+def save_users(users):
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f)
+
+def is_first_video_today(user_id):
+    users = load_users()
+    today = datetime.now().strftime("%Y-%m-%d")
+    if user_id not in users or users[user_id]["date"] != today:
+        users[user_id] = {"date": today, "count": 1}
+        save_users(users)
+        return True
+    else:
+        users[user_id]["count"] += 1
+        save_users(users)
+        return False
+
+# ---------------------------
+# 6. المسارات (Routes)
+# ---------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -88,8 +126,19 @@ def download():
     if not any(domain in url for domain in ALLOWED_DOMAINS):
         return jsonify({"error": "❌ هذا الرابط غير مدعوم"}), 400
 
-    file_id = uuid.uuid4().hex[:8]
+    # تحديد المستخدم عن طريق IP
+    user_ip = request.remote_addr
+    first_video = is_first_video_today(user_ip)
 
+    # إذا لم يكن الفيديو الأول → إعلام الواجهة بعرض الإعلان
+    if not first_video:
+        return jsonify({
+            "status": "ad_required",
+            "message": "🎬 يجب مشاهدة الإعلان قبل التنزيل"
+        })
+
+    # تنزيل الفيديو أو الصوت
+    file_id = uuid.uuid4().hex[:8]
     try:
         ydl_opts = get_ydl_opts(mode, file_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -97,7 +146,6 @@ def download():
 
         ext = "mp3" if mode == "audio" else "mp4"
         filename = f"{file_id}.{ext}"
-        # توليد رابط مباشر للملف
         download_url = url_for('get_file', filename=filename, _external=True)
 
         return jsonify({
@@ -115,8 +163,6 @@ def get_file(filename):
         return "❌ الملف غير موجود", 404
 
     mimetype = "audio/mpeg" if filename.endswith(".mp3") else "video/mp4"
-
-    # استخدام as_attachment لإجبار المتصفح على التحميل بدلاً من المعاينة
     response = make_response(send_file(
         file_path,
         mimetype=mimetype,
@@ -124,7 +170,7 @@ def get_file(filename):
         download_name=filename
     ))
 
-    # هيدرات الحماية والتوافق
+    # هيدرات حماية
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
@@ -133,6 +179,8 @@ def get_file(filename):
 def sw():
     return app.send_static_file("sw.js")
 
-# التشغيل النهائي
+# ---------------------------
+# 7. التشغيل النهائي
+# ---------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
