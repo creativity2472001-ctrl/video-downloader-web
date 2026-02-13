@@ -9,15 +9,11 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# ---------------------------
 # 1. إعدادات المجلدات
-# ---------------------------
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# ---------------------------
 # 2. النطاقات المدعومة
-# ---------------------------
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be", "youtube-nocookie.com",
     "tiktok.com", "vm.tiktok.com",
@@ -31,9 +27,7 @@ ALLOWED_DOMAINS = [
     "vimeo.com", "dailymotion.com", "twitcasting.tv"
 ]
 
-# ---------------------------
-# 3. تنظيف الملفات القديمة كل 30 دقيقة (أكثر من 6 ساعات)
-# ---------------------------
+# 3. تنظيف الملفات القديمة
 def cleanup_old_files():
     while True:
         now = time.time()
@@ -46,11 +40,11 @@ def cleanup_old_files():
 
 threading.Thread(target=cleanup_old_files, daemon=True).start()
 
-# ---------------------------
-# 4. إعدادات yt-dlp للتحميل
-# ---------------------------
+# 4. إعدادات yt-dlp المحسنة للصوت والفيديو
 def get_ydl_opts(mode, file_id):
+    # نحدد الامتداد المؤقت لـ yt-dlp
     base_path = os.path.join(DOWNLOAD_DIR, f"{file_id}.%(ext)s")
+    
     opts = {
         'outtmpl': base_path,
         'restrictfilenames': True,
@@ -62,12 +56,13 @@ def get_ydl_opts(mode, file_id):
     if mode == "audio":
         opts.update({
             'format': 'bestaudio/best',
-            'outtmpl': base_path,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192'
+                'preferredquality': '192',
             }],
+            # هذا الخيار يضمن حذف ملف الفيديو الأصلي بعد استخراج الـ MP3
+            'keepvideo': False, 
         })
     else:
         opts.update({
@@ -81,20 +76,17 @@ def get_ydl_opts(mode, file_id):
         })
     return opts
 
-# ---------------------------
-# 5. تتبع المستخدمين والفيديو اليومي
-# ---------------------------
+# 5. تتبع المستخدمين (نظام الإعلانات)
 USERS_FILE = "users.json"
 
 def load_users():
-    if not os.path.exists(USERS_FILE):
-        return {}
-    with open(USERS_FILE, "r") as f:
-        return json.load(f)
+    if not os.path.exists(USERS_FILE): return {}
+    try:
+        with open(USERS_FILE, "r") as f: return json.load(f)
+    except: return {}
 
 def save_users(users):
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f)
+    with open(USERS_FILE, "w") as f: json.dump(users, f)
 
 def is_first_video_today(user_id):
     users = load_users()
@@ -108,9 +100,7 @@ def is_first_video_today(user_id):
         save_users(users)
         return False
 
-# ---------------------------
-# 6. المسارات (Routes)
-# ---------------------------
+# 6. المسارات
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -127,31 +117,30 @@ def download():
     if not any(domain in url for domain in ALLOWED_DOMAINS):
         return jsonify({"error": "❌ هذا الرابط غير مدعوم"}), 400
 
-    # تحديد المستخدم عن طريق IP
     user_ip = request.remote_addr
     first_video = is_first_video_today(user_ip)
 
-    # إذا لم يكن الفيديو الأول → إعلام الواجهة بعرض الإعلان
+    # نظام الإعلانات: إذا لم يكن الفيديو الأول اطلب مشاهدة إعلان
     if not first_video:
         return jsonify({
             "status": "ad_required",
             "message": "🎬 يجب مشاهدة الإعلان قبل التنزيل"
         })
 
-    # تنزيل الفيديو أو الصوت
     file_id = uuid.uuid4().hex[:8]
     try:
         ydl_opts = get_ydl_opts(mode, file_id)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-        # تحديد الامتداد النهائي
-        filename = f"{file_id}.mp3" if mode == "audio" else f"{file_id}.mp4"
+        # التأكد من الامتداد النهائي بعد المعالجة بـ FFmpeg
+        final_ext = "mp3" if mode == "audio" else "mp4"
+        filename = f"{file_id}.{final_ext}"
         file_path = os.path.join(DOWNLOAD_DIR, filename)
 
-        # التحقق من وجود الملف
+        # فحص إضافي للتأكد من نجاح التحويل بـ FFmpeg
         if not os.path.exists(file_path):
-            return jsonify({"error": "❌ فشل تحميل الملف"}), 500
+             return jsonify({"error": "❌ فشل استخراج الملف، تأكد من تثبيت FFmpeg"}), 500
 
         download_url = url_for('get_file', filename=filename, _external=True)
 
@@ -170,6 +159,7 @@ def get_file(filename):
         return "❌ الملف غير موجود", 404
 
     mimetype = "audio/mpeg" if filename.endswith(".mp3") else "video/mp4"
+    
     response = make_response(send_file(
         file_path,
         mimetype=mimetype,
@@ -177,7 +167,6 @@ def get_file(filename):
         download_name=filename
     ))
 
-    # هيدرات حماية
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
@@ -186,8 +175,5 @@ def get_file(filename):
 def sw():
     return app.send_static_file("sw.js")
 
-# ---------------------------
-# 7. التشغيل النهائي
-# ---------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
