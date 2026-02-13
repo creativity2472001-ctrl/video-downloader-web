@@ -62,11 +62,12 @@ def get_ydl_opts(mode, file_id):
     if mode == "audio":
         opts.update({
             'format': 'bestaudio/best',
+            'outtmpl': base_path,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192'
-            }]
+            }],
         })
     else:
         opts.update({
@@ -144,8 +145,14 @@ def download():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-        ext = "mp3" if mode == "audio" else "mp4"
-        filename = f"{file_id}.{ext}"
+        # تحديد الامتداد النهائي
+        filename = f"{file_id}.mp3" if mode == "audio" else f"{file_id}.mp4"
+        file_path = os.path.join(DOWNLOAD_DIR, filename)
+
+        # التحقق من وجود الملف
+        if not os.path.exists(file_path):
+            return jsonify({"error": "❌ فشل تحميل الملف"}), 500
+
         download_url = url_for('get_file', filename=filename, _external=True)
 
         return jsonify({
