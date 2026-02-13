@@ -42,7 +42,6 @@ threading.Thread(target=cleanup_old_files, daemon=True).start()
 
 # 4. إعدادات yt-dlp المحسنة للصوت والفيديو
 def get_ydl_opts(mode, file_id):
-    # نحدد الامتداد المؤقت لـ yt-dlp
     base_path = os.path.join(DOWNLOAD_DIR, f"{file_id}.%(ext)s")
     
     opts = {
@@ -61,8 +60,7 @@ def get_ydl_opts(mode, file_id):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            # هذا الخيار يضمن حذف ملف الفيديو الأصلي بعد استخراج الـ MP3
-            'keepvideo': False, 
+            'keepvideo': False,
         })
     else:
         opts.update({
@@ -76,7 +74,7 @@ def get_ydl_opts(mode, file_id):
         })
     return opts
 
-# 5. تتبع المستخدمين (نظام الإعلانات)
+# 5. تتبع المستخدمين
 USERS_FILE = "users.json"
 
 def load_users():
@@ -120,7 +118,6 @@ def download():
     user_ip = request.remote_addr
     first_video = is_first_video_today(user_ip)
 
-    # نظام الإعلانات: إذا لم يكن الفيديو الأول اطلب مشاهدة إعلان
     if not first_video:
         return jsonify({
             "status": "ad_required",
@@ -133,12 +130,10 @@ def download():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-        # التأكد من الامتداد النهائي بعد المعالجة بـ FFmpeg
         final_ext = "mp3" if mode == "audio" else "mp4"
         filename = f"{file_id}.{final_ext}"
         file_path = os.path.join(DOWNLOAD_DIR, filename)
 
-        # فحص إضافي للتأكد من نجاح التحويل بـ FFmpeg
         if not os.path.exists(file_path):
              return jsonify({"error": "❌ فشل استخراج الملف، تأكد من تثبيت FFmpeg"}), 500
 
@@ -176,4 +171,5 @@ def sw():
     return app.send_static_file("sw.js")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
