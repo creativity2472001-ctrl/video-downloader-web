@@ -98,8 +98,20 @@
 
     <div id="ad-box">
         <small id="ad-label" style="color:#856404">إعلان ممول</small>
-        <div id="ad-content" style="height:60px; display:flex; align-items:center; justify-content:center; color:#666; font-size:13px;">
-            يرجى الانتظار، جاري معالجة طلبك...
+        <div id="ad-content" style="height:auto; display:flex; align-items:center; justify-content:center; text-align:center;">
+            <!-- كود Google AdSense -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8111359746390639"
+                 crossorigin="anonymous"></script>
+            <!-- EasyDown_AdBox_Main -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-8111359746390639"
+                 data-ad-slot="1545850377"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
         </div>
     </div>
 
@@ -192,7 +204,6 @@ async function startProcess() {
         } 
         else if (result.status === "ad_required") {
             alert(dict[currentLang].ad);
-            // هنا يمكنك مستقبلاً وضع كود فتح الإعلان الحقيقي
             location.reload();
         }
         else {
