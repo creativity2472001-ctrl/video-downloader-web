@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EasyDown - المحمل الذكي</title>
     
+    <!-- Manifest للتطبيق -->
     <link rel="manifest" href="/static/manifest.json">
     <link rel="icon" href="/static/logo.png">
     <meta name="theme-color" content="#007bff">
 
+    <!-- أيقونات iOS دائرية -->
     <link rel="apple-touch-icon" href="/static/logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,14 +22,13 @@
         
         .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
         .brand { display: flex; align-items: center; gap: 10px; }
-        .brand img { width: 35px; height: 35px; border-radius: 8px; }
+        .brand img { width: 35px; height: 35px; border-radius: 50%; } /* أيقونة دائرية */
         .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
         
         .header-actions { display: flex; align-items: center; gap: 15px; }
         .install-btn { font-size: 24px; cursor: pointer; display: none; background: none; border: none; outline: none; padding: 0; animation: bounce 2s infinite; }
         .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; user-select: none; }
 
-        /* السايد بار المطور */
         .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; overflow-y: auto; }
         .sidebar.active { right: 0; visibility: visible; }
         .close-sidebar { font-size: 24px; cursor: pointer; color: #888; display: block; margin-bottom: 20px; text-align: left; }
@@ -75,20 +76,23 @@
         <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
     </div>
 
+    <!-- دليل الاستخدام -->
     <div class="help-section">
         <h4 id="h-guide">📖 دليل الاستخدام</h4>
-        <p id="p-guide">انسخ رابط الفيديو من (TikTok, Instagram, YouTube)، الصقه في المربع، واضغط تحميل.</p>
+        <p id="p-guide">انسخ رابط الفيديو من (TikTok, Instagram, YouTube, Facebook, Twitter...) والصقه في المربع، ثم اضغط "تحميل الآن".</p>
     </div>
 
+    <!-- تثبيت التطبيق -->
     <div class="help-section">
         <h4 id="h-install">📲 تثبيت التطبيق</h4>
-        <p id="p-install-ios"><b>للآيفون:</b> اضغط على زر المشاركة 📤 ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
-        <p id="p-install-and"><b>للأندرويد:</b> اضغط على زر 📲 بجانب القائمة أو (⋮) في المتصفح ثم "تثبيت".</p>
+        <p id="p-install-ios"><b>للآيفون:</b> اضغط زر المشاركة 📤 → اختر "إضافة إلى الشاشة الرئيسية" → التطبيق يظهر مثل أي تطبيق، ويمكنك تحميل الفيديوهات مباشرة إلى الاستوديو.</p>
+        <p id="p-install-and"><b>للأندرويد:</b> اضغط زر التثبيت 📲 بجانب القائمة أو (⋮) → اختر "تثبيت" → التطبيق يظهر على الشاشة الرئيسية، والفيديوهات تحفظ في مجلد التنزيلات.</p>
     </div>
 
+    <!-- لمستخدمي iPhone -->
     <div class="help-section" style="border-color: #ffc107; background: #fff9e6;">
         <h4 id="h-iphone">⚠️ لمستخدمي الآيفون</h4>
-        <p id="p-iphone-tip">بعد فتح الفيديو، اضغط على زر المشاركة 📤 ثم اختر 'حفظ الفيديو' 📥 ليرسل للاستوديو مباشرة.</p>
+        <p id="p-iphone-tip">بعد فتح الفيديو، اضغط زر المشاركة 📤 → اختر 'حفظ الفيديو' 📥 → يتم حفظه مباشرة في الاستوديو.</p>
     </div>
 </aside>
 
