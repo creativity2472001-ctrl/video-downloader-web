@@ -112,24 +112,24 @@
         /* خيارات التحميل */
         .mode-selector {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .mode-btn {
             flex: 1;
-            padding: 15px;
-            border-radius: 15px;
+            padding: 10px 5px;
+            border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
             color: white;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .mode-btn.active {
@@ -140,18 +140,18 @@
         }
 
         .mode-btn i {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         /* زر التحميل الرئيسي */
         .download-btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             border-radius: 15px;
             border: none;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -310,7 +310,7 @@
             margin-bottom: 10px;
         }
 
-        /* تحسينات للآيفون */
+        /* تحسينات للآيفون - تم إزالة flex-direction: column */
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
@@ -318,10 +318,6 @@
             
             .header h1 {
                 font-size: 2rem;
-            }
-            
-            .mode-selector {
-                flex-direction: column;
             }
         }
     </style>
@@ -338,7 +334,7 @@
         <div class="input-card">
             <div class="input-group">
                 <label><i class="fas fa-link"></i> رابط الفيديو</label>
-                <input type="url" id="videoUrl" placeholder="https://youtube.com/..." dir="ltr">
+                <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
             </div>
 
             <div class="mode-selector">
@@ -386,7 +382,7 @@
 
         <!-- الفوتر -->
         <div class="footer">
-            © 2026 EasyDown - جميع الحقوق محفوظة
+            ©️ 2026 EasyDown - جميع الحقوق محفوظة
         </div>
     </div>
 
@@ -424,8 +420,8 @@
             startBtn.disabled = true;
 
             try {
-                // إرسال طلب التحميل
-                const response = await fetch('/api/download', {
+                // ✅ تم التعديل هنا: /download بدلاً من /api/download
+                const response = await fetch('/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
