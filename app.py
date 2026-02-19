@@ -108,12 +108,12 @@ def download():
         if not filename:
             return jsonify({"error": "❌ فشل العثور على الملف"}), 500
 
-        # رابط مباشر للتحميل
-        download_link = f"/get/{filename}"
+        # ✅ رابط مباشر كامل مع النطاق
+        download_url = f"http://{request.host}/get/{filename}"
 
         return jsonify({
             "status": "success",
-            "download_link": download_link,
+            "download_url": download_url,
             "title": title
         })
 
