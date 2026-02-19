@@ -4,20 +4,27 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
 from datetime import datetime
 
-app = Flask(__name__)
-app.secret_key = 'easydown_secret_key_2026'
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'easydown_secret_key_2026')
+
+# تحديد مجلد التحميل
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be",
-    "tiktok.com", "vm.tiktok.com",
-    "instagram.com", "www.instagram.com",
-    "facebook.com", "fb.watch",
-    "twitter.com", "x.com"
+    "tiktok.com", "vm.tiktok.com", "vt.tiktok.com",
+    "instagram.com", "www.instagram.com", "instagr.am",
+    "facebook.com", "fb.watch", "www.facebook.com",
+    "twitter.com", "x.com", "www.twitter.com",
+    "snapchat.com", "www.snapchat.com"
 ]
 
 # قائمة اللغات المدعومة
@@ -219,60 +226,80 @@ LANGUAGES = {
 def get_text(key, lang='ar'):
     return LANGUAGES.get(lang, LANGUAGES['ar']).get(key, key)
 
+# تنظيف الملفات القديمة (كل ساعة)
 def cleanup():
     while True:
-        now = time.time()
-        for f in os.listdir(DOWNLOAD_DIR):
-            path = os.path.join(DOWNLOAD_DIR, f)
-            if os.path.isfile(path) and os.stat(path).st_mtime < now - 3600:
-                try: os.remove(path)
-                except: pass
-        time.sleep(1800)
+        try:
+            now = time.time()
+            for f in os.listdir(DOWNLOAD_DIR):
+                path = os.path.join(DOWNLOAD_DIR, f)
+                if os.path.isfile(path):
+                    file_age = now - os.stat(path).st_mtime
+                    if file_age > 3600:  # ساعة واحدة
+                        try:
+                            os.remove(path)
+                            logger.info(f"تم حذف الملف القديم: {f}")
+                        except Exception as e:
+                            logger.error(f"خطأ في حذف الملف {f}: {e}")
+        except Exception as e:
+            logger.error(f"خطأ في عملية التنظيف: {e}")
+        
+        time.sleep(1800)  # كل 30 دقيقة
 
-threading.Thread(target=cleanup, daemon=True).start()
+# بدء خيط التنظيف
+cleanup_thread = threading.Thread(target=cleanup, daemon=True)
+cleanup_thread.start()
 
 @app.route('/')
 def index():
-    lang = request.args.get('lang', 'ar')
-    session['lang'] = lang
+    lang = request.args.get('lang', session.get('lang', 'ar'))
+    if lang in LANGUAGES:
+        session['lang'] = lang
     return render_template('index.html', lang=lang, texts=LANGUAGES[lang], languages=LANGUAGES)
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
     if lang in LANGUAGES:
         session['lang'] = lang
-    return index()
+    return {'success': True, 'lang': lang}
 
 @app.route('/api/info', methods=['POST'])
 def video_info():
-    data = request.get_json()
-    url = data.get('url')
     try:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        
+        if not url:
+            return jsonify({'error': '⚠️ الرابط مطلوب'}), 400
+        
         ydl_opts = {'quiet': True, 'no_warnings': True}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+        
         return jsonify({
             'success': True,
             'title': info.get('title', 'Video'),
             'duration': info.get('duration', 0)
         })
-    except:
-        return jsonify({'error': '❌ خطأ'}), 400
+    except Exception as e:
+        logger.error(f"Error in video_info: {e}")
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/download', methods=['POST'])
 def download():
-    data = request.get_json()
-    url = data.get('url')
-    mode = data.get('mode', 'video')
-    quality = data.get('quality', 'best')
-
-    if not url:
-        return jsonify({'error': '❌ الرابط مطلوب'}), 400
-
-    file_id = uuid.uuid4().hex[:8]
-    base = os.path.join(DOWNLOAD_DIR, file_id)
-
     try:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        mode = data.get('mode', 'video')
+        quality = data.get('quality', 'best')
+
+        if not url:
+            return jsonify({'error': '❌ الرابط مطلوب'}), 400
+
+        file_id = uuid.uuid4().hex[:8]
+        base = os.path.join(DOWNLOAD_DIR, file_id)
+
+        # إعدادات yt-dlp
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
@@ -297,10 +324,13 @@ def download():
             else:
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
+        logger.info(f"بدء تحميل: {url} - {mode} - {quality}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
 
+        # البحث عن الملف المحمل
         filename = None
         for f in os.listdir(DOWNLOAD_DIR):
             if f.startswith(file_id):
@@ -308,29 +338,57 @@ def download():
                 break
 
         if not filename:
-            return jsonify({'error': '❌ فشل'}), 500
+            return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
+        # إنشاء رابط التحميل
+        download_url = f"/get/{filename}"
+
+        logger.info(f"تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
-            'download_url': f"/get/{filename}",
+            'download_url': download_url,
             'title': title
         })
 
     except Exception as e:
+        logger.error(f"Error in download: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get/<filename>')
 def get_file(filename):
-    path = os.path.join(DOWNLOAD_DIR, filename)
-    if not os.path.exists(path):
-        return 'الملف غير موجود', 404
+    try:
+        path = os.path.join(DOWNLOAD_DIR, filename)
+        
+        # التحقق من أمان اسم الملف
+        if '..' in filename or '/' in filename or '\\' in filename:
+            return 'اسم ملف غير صالح', 403
+        
+        if not os.path.exists(path):
+            return 'الملف غير موجود', 404
 
-    return send_file(
-        path,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='video/mp4' if filename.endswith('.mp4') else 'audio/mpeg'
-    )
+        # تحديد نوع الملف
+        mimetype = 'video/mp4' if filename.endswith('.mp4') else 'audio/mpeg'
+
+        return send_file(
+            path,
+            as_attachment=True,
+            download_name=filename,
+            mimetype=mimetype
+        )
+    except Exception as e:
+        logger.error(f"Error in get_file: {e}")
+        return str(e), 500
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({'error': 'الصفحة غير موجودة'}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({'error': 'خطأ في الخادم'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Railway يوفر PORT عبر متغير البيئة
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
