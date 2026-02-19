@@ -1,243 +1,465 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EasyDown - المحمل الذكي</title>
+import os
+import json
+import sqlite3
+import asyncio
+import logging
+from datetime import datetime, timedelta, date
+from dataclasses import dataclass
+from typing import Optional
+import yt_dlp
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, LabeledPrice
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, PreCheckoutQueryHandler, filters, ContextTypes
+from utils import get_text, download_media
+
+# =========================
+# إعداد التسجيل
+# =========================
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# =========================
+# نظام حساب النجوم حسب مدة الفيديو (للمستخدم)
+# =========================
+def calculate_stars(duration_seconds, is_first_video_today=False):
+    """
+    حساب عدد النجوم التي سيدفعها المستخدم حسب مدة الفيديو
     
-    <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" href="/static/logo.png">
-    <meta name="theme-color" content="#007bff">
+    القواعد:
+    - إذا كان أول فيديو لليوم وأقل من دقيقة = مجاني
+    - أول فيديو لليوم وأكثر من دقيقة = 2 نجوم فقط (سعر مخفض)
+    - باقي الفيديوهات:
+        * أقل من دقيقة = 1 نجمة
+        * 1-5 دقائق = نجمة لكل دقيقة
+        * 5-30 دقيقة = نجمة لكل دقيقتين
+        * 30-60 دقيقة = نجمة لكل 3 دقائق
+        * أكثر من ساعة = نجمة لكل 5 دقائق
+    """
+    if is_first_video_today:
+        if duration_seconds < 60:
+            return 0  # مجاني
+        else:
+            return 2  # سعر مخفض لأول فيديو طويل
+    
+    if duration_seconds < 60:
+        return 1
+    
+    minutes = duration_seconds / 60
+    
+    if minutes <= 5:
+        return int(minutes)
+    
+    if minutes <= 30:
+        base = 5
+        extra = (minutes - 5) / 2
+        return int(base + extra)
+    
+    if minutes <= 60:
+        base = 17
+        extra = (minutes - 30) / 3
+        return int(base + extra)
+    
+    base = 27
+    extra = (minutes - 60) / 5
+    return int(base + extra)
 
-    <link rel="apple-touch-icon" href="/static/logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EasyDown">
+async def get_video_duration(url):
+    """الحصول على مدة الفيديو"""
+    try:
+        ydl_opts = {'quiet': True, 'no_warnings': True}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = await asyncio.to_thread(yl.extract_info, url, download=False)
+            return info.get('duration', 0)
+    except:
+        return 0
 
-    <style>
-        :root { --primary: #007bff; --bg: #f4f7f6; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+# =========================
+# نظام أول فيديو كل يوم (مجاني أو مخفض)
+# =========================
+user_first_video = {}  # تخزين حالة أول فيديو لكل مستخدم
+
+def check_first_video_status(user_id):
+    """التحقق من حالة أول فيديو للمستخدم اليوم"""
+    today = date.today()
+    
+    if user_id not in user_first_video:
+        user_first_video[user_id] = today
+        return True  # أول فيديو اليوم
+    
+    last_first = user_first_video[user_id]
+    
+    if last_first < today:
+        user_first_video[user_id] = today
+        return True  # يوم جديد -> أول فيديو
+    else:
+        return False  # ليس أول فيديو
+
+# =========================
+# قاعدة بيانات بسيطة لتخزين إحصائياتك (اختياري)
+# =========================
+stats_db = sqlite3.connect('bot_stats.db', check_same_thread=False)
+stats_cursor = stats_db.cursor()
+
+stats_cursor.execute('''
+CREATE TABLE IF NOT EXISTS bot_earnings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT,
+    total_stars INTEGER DEFAULT 0,
+    total_downloads INTEGER DEFAULT 0
+)
+''')
+stats_db.commit()
+
+def add_earnings(stars: int):
+    """تسجيل الأرباح (لمعرفتك أنت فقط)"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    stats_cursor.execute('''
+    INSERT INTO bot_earnings (date, total_stars, total_downloads)
+    VALUES (?, ?, 1)
+    ON CONFLICT(date) DO UPDATE SET
+        total_stars = total_stars + ?,
+        total_downloads = total_downloads + 1
+    ''', (today, stars, stars))
+    stats_db.commit()
+
+# =========================
+# تخزين لغة المستخدم
+# =========================
+user_lang = {}
+
+# =========================
+# معالج أمر /start
+# =========================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in user_lang:
+        user_lang[user_id] = 'ar'
+    
+    # التحقق من حالة أول فيديو لليوم
+    is_first = check_first_video_status(user_id)
+    
+    first_video_text = ""
+    if is_first:
+        first_video_text = "\n🎁 أول فيديو اليوم: أقل من دقيقة مجاني، أكثر من دقيقة نجمتين فقط!"
+    
+    keyboard = [
+        [KeyboardButton("اللغة 🌐"), KeyboardButton(get_text('help_btn', user_lang[user_id]))],
+        [KeyboardButton("إعادة التشغيل 🔄")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+    welcome_text = (
+        f"🎬 أهلاً بك في بوت التحميل!{first_video_text}\n\n"
+        "💰 **نظام الأسعار:**\n"
+        "• فيديو أقل من دقيقة = ⭐1\n"
+        "• 1-5 دقائق = ⭐ لكل دقيقة\n"
+        "• 5-30 دقيقة = ⭐ لكل دقيقتين\n"
+        "• 30-60 دقيقة = ⭐ لكل 3 دقائق\n"
+        "• أكثر من ساعة = ⭐ لكل 5 دقائق\n\n"
+        "🎁 **عرض خاص:** أول فيديو كل يوم:\n"
+        "• أقل من دقيقة = مجاني!\n"
+        "• أكثر من دقيقة = نجمتين فقط!\n\n"
+        "أرسل رابط فيديو للبدء"
+    )
+    
+    await update.message.reply_text(
+        welcome_text,
+        reply_markup=reply_markup
+    )
+
+# =========================
+# معالج المساعدة
+# =========================
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    lang = user_lang.get(user_id, 'ar')
+    
+    help_text = get_text('help', lang)
+    
+    if lang == 'ar':
+        help_text += "\n\n📖 **تعليمات التحميل:**\n\n"
+        help_text += "1️⃣ أرسل رابط الفيديو\n"
+        help_text += "2️⃣ اختر الجودة المطلوبة\n"
+        help_text += "3️⃣ ادفع النجوم المطلوبة\n"
+        help_text += "4️⃣ استلم الفيديو\n\n"
+        help_text += "💰 **نظام الأسعار:**\n"
+        help_text += "• أول فيديو باليوم (أقل من دقيقة) = مجاني!\n"
+        help_text += "• أول فيديو باليوم (أكثر من دقيقة) = ⭐2\n"
+        help_text += "• باقي الفيديوهات حسب المدة\n\n"
+        help_text += "⭐ **النجوم:** تشتريها من تيليجرام عبر @wallet"
+    else:
+        help_text += "\n\n📖 **Instructions:**\n\n"
+        help_text += "1️⃣ Send video link\n"
+        help_text += "2️⃣ Choose quality\n"
+        help_text += "3️⃣ Pay required stars\n"
+        help_text += "4️⃣ Get video\n\n"
+        help_text += "💰 **Pricing:**\n"
+        help_text += "• First video (less than 1 min) = FREE!\n"
+        help_text += "• First video (more than 1 min) = ⭐2\n"
+        help_text += "• Other videos based on duration"
+    
+    await update.message.reply_text(help_text)
+
+# =========================
+# معالج اللغة
+# =========================
+async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    keyboard = [
+        [InlineKeyboardButton("🇸🇦 عربي", callback_data='lang_ar'),
+         InlineKeyboardButton("🇺🇸 English", callback_data='lang_en')],
+        [InlineKeyboardButton("🇹🇷 Türkçe", callback_data='lang_tr'),
+         InlineKeyboardButton("🇷🇺 Русский", callback_data='lang_ru')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "اختر اللغة:" if user_lang.get(user_id, 'ar') == 'ar' else "Choose language:",
+        reply_markup=reply_markup
+    )
+
+# =========================
+# معالج إعادة التشغيل
+# =========================
+async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    lang = user_lang.get(user_id, 'ar')
+    
+    if user_id in context.user_data:
+        context.user_data.clear()
+    
+    await update.message.reply_text(
+        "🔄 تم إعادة التشغيل" if lang == 'ar' else "🔄 Restarted"
+    )
+    await start(update, context)
+
+# =========================
+# معالج الروابط وعرض خيارات الجودة
+# =========================
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    user_id = update.effective_user.id
+    lang = user_lang.get(user_id, 'ar')
+    
+    # معالجة أزرار القائمة
+    if text in ["اللغة 🌐", "Language 🌐"]:
+        await language_command(update, context)
+        return
+    elif text in ["المساعدة 📖", get_text('help_btn', 'en')]:
+        await help_command(update, context)
+        return
+    elif text in ["إعادة التشغيل 🔄", get_text('restart_btn', 'en')]:
+        await restart_command(update, context)
+        return
+    
+    # معالجة الروابط
+    if text.startswith(('http://', 'https://')):
+        # حفظ الرابط مؤقتاً
+        context.user_data['download_url'] = text
         
-        .app-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .brand img { width: 35px; height: 35px; border-radius: 8px; }
-        .brand span { font-weight: bold; color: var(--primary); font-size: 20px; }
+        # التحقق من حالة أول فيديو لليوم
+        is_first = check_first_video_status(user_id)
         
-        .header-actions { display: flex; align-items: center; gap: 15px; }
-        .install-btn { font-size: 24px; cursor: pointer; background: none; border: none; outline: none; padding: 0; display: none; animation: bounce 2s infinite; }
-        .menu-btn { font-size: 30px; cursor: pointer; color: #333; line-height: 1; user-select: none; }
-
-        .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1000; padding: 25px; box-sizing: border-box; visibility: hidden; overflow-y: auto; }
-        .sidebar.active { right: 0; visibility: visible; }
-        .close-sidebar { font-size: 24px; cursor: pointer; color: #888; display: block; margin-bottom: 20px; text-align: left; }
-
-        .help-section { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-top: 20px; text-align: right; border-right: 4px solid var(--primary); }
-        .help-section h4 { margin: 0 0 10px 0; color: var(--primary); font-size: 16px; }
-        .help-section p { font-size: 13px; color: #555; line-height: 1.6; margin: 5px 0; }
-
-        .card { background: rgba(255,255,255,0.98); width: 92%; max-width: 450px; padding: 40px 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; z-index: 10; }
-        input { width: 100%; padding: 18px; border: 2px solid #eee; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; text-align: center; margin-bottom: 15px; }
+        # حساب مدة الفيديو والنجوم المطلوبة
+        duration = await get_video_duration(text)
+        stars_needed = calculate_stars(duration, is_first)
         
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: 2px solid #eee; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .mode-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0,123,255,0.05); }
-
-        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; display: none; }
-        #ad-box { display: none; margin: 15px 0; padding: 15px; background: #fffdf0; border: 1px dashed #ffd600; border-radius: 15px; text-align: center; }
-
-        .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 10px; margin: 20px 0; display: none; overflow: hidden; }
-        .progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.4s ease; }
-        .status-msg { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 5px; }
+        minutes = int(duration // 60)
+        seconds = int(duration % 60)
         
-        .lang-btn { width: 48%; padding: 10px; margin-top: 10px; border: 1px solid #eee; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-    </style>
-</head>
-<body>
+        stars_display = "مجاني" if stars_needed == 0 else f"⭐{stars_needed}"
+        
+        # رسالة المدة
+        duration_text = f"\n⏱️ المدة: {minutes}:{seconds:02d}"
+        
+        if is_first:
+            if stars_needed == 0:
+                duration_text += "\n🎁 أول فيديو اليوم وأقل من دقيقة → مجاني!"
+            else:
+                duration_text += f"\n🎁 أول فيديو اليوم → سعر خاص: {stars_display}"
+        
+        keyboard = [
+            [
+                InlineKeyboardButton(f"480p 🎬 {stars_display}", callback_data=f'quality_480p_{stars_needed}'),
+                InlineKeyboardButton(f"720p 🎬 {stars_display}", callback_data=f'quality_720p_{stars_needed}')
+            ],
+            [
+                InlineKeyboardButton(f"أفضل جودة ✨ {stars_display}", callback_data=f'quality_best_{stars_needed}'),
+                InlineKeyboardButton(f"صوت 🎵 {stars_display}", callback_data=f'quality_audio_{stars_needed}')
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            f"🎯 اختر جودة التحميل:{duration_text}",
+            reply_markup=reply_markup
+        )
+    else:
+        await update.message.reply_text(
+            "❌ رابط غير صالح" if lang == 'ar' else "❌ Invalid link"
+        )
 
-<header class="app-header">
-    <div class="brand">
-        <img src="/static/logo.png" alt="Logo">
-        <span>EasyDown</span>
-    </div>
-    <div class="header-actions">
-        <button id="pwaInstall" class="install-btn" title="تثبيت التطبيق">📲</button>
-        <div class="menu-btn" onclick="toggleSidebar()">☰</div>
-    </div>
-</header>
-
-<aside class="sidebar" id="sidebar">
-    <span class="close-sidebar" onclick="toggleSidebar()">✕</span>
-    <h3 id="txt-menu-title">القائمة</h3>
-    <div style="display: flex; justify-content: space-between;">
-        <button class="lang-btn" onclick="updateLang('ar')">العربية 🇸🇦</button>
-        <button class="lang-btn" onclick="updateLang('en')">English 🇺🇸</button>
-    </div>
-
-    <div class="help-section">
-        <h4 id="h-guide">📖 دليل الاستخدام</h4>
-        <p id="p-guide">انسخ رابط الفيديو من (TikTok, Instagram, YouTube)، الصقه في المربع، واضغط تحميل.</p>
-    </div>
-
-    <div class="help-section" style="border-color: #ffc107; background: #fff9e6;">
-        <h4 id="h-iphone">⚠️ لمستخدمي الآيفون</h4>
-        <p id="p-iphone-tip">بعد فتح الفيديو، اضغط على زر المشاركة 📤 ثم اختر 'حفظ الفيديو' 📥 ليرسل للاستوديو مباشرة.</p>
-    </div>
-</aside>
-
-<div class="card">
-    <h1 id="txt-title">EasyDown</h1>
-    <p id="txt-sub">أدخل الرابط لنبدأ</p>
+# =========================
+# معالج الأزرار (اختيار الجودة وطلب الدفع)
+# =========================
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
     
-    <input type="text" id="videoUrl" placeholder="الصق الرابط هنا..." oninput="validateInput()">
+    data = query.data
+    user_id = update.effective_user.id
+    lang = user_lang.get(user_id, 'ar')
     
-    <div class="mode-selector" id="modeArea">
-        <button class="mode-btn active" id="vBtn" onclick="setMode('video')">🎬 فيديو</button>
-        <button class="mode-btn" id="aBtn" onclick="setMode('audio')">🎵 صوت MP3</button>
-    </div>
-
-    <div id="ad-box">
-        <small id="ad-label" style="color:#856404">إعلان ممول</small>
-        <div id="ad-content" style="height:auto; display:flex; align-items:center; justify-content:center; text-align:center;">
-            <!-- كود Google AdSense -->
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8111359746390639"
-                 crossorigin="anonymous"></script>
-            <!-- EasyDown_AdBox_Main -->
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-8111359746390639"
-                 data-ad-slot="1545850377"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
-    </div>
-
-    <div id="pContainer" class="progress-container"><div id="pBar" class="progress-bar"></div></div>
-    <div id="statusTxt" class="status-msg"></div>
-
-    <button id="dlBtn" class="main-btn" onclick="startProcess()">تحميل الآن</button>
-</div>
-
-<script>
-let currentLang = 'ar';
-let currentMode = 'video';
-let deferredPrompt;
-
-const dict = {
-    ar: { 
-        title: "EasyDown", sub: "أدخل الرابط لنبدأ", dl: "تحميل الآن", menu: "القائمة",
-        ready: "✅ جاهز! جاري التحميل...", check: "تحقق من التنزيلات في هاتفك 📥",
-        ad: "🎬 يجب مشاهدة الإعلان قبل التحميل الثاني اليوم"
-    },
-    en: { 
-        title: "EasyDown", sub: "Paste link to start", dl: "Download Now", menu: "Menu",
-        ready: "✅ Ready! Downloading...", check: "Check downloads on your phone 📥",
-        ad: "🎬 Watch ad to unlock your second download today"
-    }
-};
-
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-
-function setMode(m) {
-    currentMode = m;
-    document.getElementById('vBtn').classList.toggle('active', m === 'video');
-    document.getElementById('aBtn').classList.toggle('active', m === 'audio');
-}
-
-function updateLang(l) {
-    currentLang = l;
-    document.body.dir = l === 'ar' ? 'rtl' : 'ltr';
-    document.getElementById('txt-title').innerText = dict[l].title;
-    document.getElementById('txt-sub').innerText = dict[l].sub;
-    document.getElementById('dlBtn').innerText = dict[l].dl;
-    document.getElementById('txt-menu-title').innerText = dict[l].menu;
-}
-
-function validateInput() {
-    const url = document.getElementById('videoUrl').value.trim();
-    document.getElementById('dlBtn').style.display = url.length > 8 ? 'block' : 'none';
-}
-
-async function startProcess() {
-    const url = document.getElementById('videoUrl').value.trim();
+    # معالجة تغيير اللغة
+    if data.startswith('lang_'):
+        new_lang = data.split('_')[1]
+        user_lang[user_id] = new_lang
+        await query.edit_message_text("✅ تم تغيير اللغة" if new_lang == 'ar' else "✅ Language changed")
+        return
     
-    document.getElementById('dlBtn').style.display = 'none';
-    document.getElementById('modeArea').style.display = 'none';
-    document.getElementById('ad-box').style.display = 'block';
-    document.getElementById('pContainer').style.display = 'block';
-    
-    let p = 0;
-    const bar = document.getElementById('pBar');
-    const st = document.getElementById('statusTxt');
-    const itv = setInterval(() => {
-        if(p < 90) p += Math.random() * 5;
-        bar.style.width = p + '%';
-        st.innerText = currentLang === 'ar' ? `جاري التجهيز... ${Math.round(p)}%` : `Processing... ${Math.round(p)}%`;
-    }, 500);
-
-    try {
-        const response = await fetch('/download', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url, mode: currentMode })
-        });
-        const result = await response.json();
-        clearInterval(itv);
-
-        if (result.status === "success") {
-            bar.style.width = '100%';
-            st.innerText = dict[currentLang].ready;
+    # معالجة اختيار الجودة وطلب الدفع
+    if data.startswith('quality_'):
+        parts = data.split('_')
+        quality = parts[1]
+        stars_needed = int(parts[2])
+        
+        url = context.user_data.get('download_url')
+        if not url:
+            await query.edit_message_text("❌ حدث خطأ، أعد إرسال الرابط")
+            return
+        
+        if stars_needed == 0:
+            # تحميل مجاني
+            await query.edit_message_text("⏳ جاري التحميل المجاني...")
             
-            const link = document.createElement('a');
-            link.href = result.download_url;
-            link.setAttribute('download', '');
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
+            try:
+                file_path = await download_media(url, quality, user_id)
+                
+                if file_path and os.path.exists(file_path):
+                    with open(file_path, 'rb') as f:
+                        if quality == 'audio':
+                            await context.bot.send_audio(chat_id=user_id, audio=f)
+                        else:
+                            await context.bot.send_video(chat_id=user_id, video=f)
+                    
+                    os.remove(file_path)
+                    await query.delete()
+                else:
+                    await query.edit_message_text("❌ فشل التحميل")
+            except Exception as e:
+                logger.error(f"Download error: {e}")
+                await query.edit_message_text("❌ حدث خطأ في التحميل")
+        else:
+            # طلب دفع بالنجوم
+            title = "تحميل فيديو" if quality != 'audio' else "تحميل صوت"
+            description = f"تحميل بجودة {quality} ⭐{stars_needed}"
+            payload = f"{quality}_{stars_needed}_{user_id}"
+            prices = [LabeledPrice("سعر التحميل", stars_needed)]
+            
+            await context.bot.send_invoice(
+                chat_id=user_id,
+                title=title,
+                description=description,
+                payload=payload,
+                provider_token="",
+                currency="XTR",
+                prices=prices
+            )
+            
+            await query.message.delete()
 
-            setTimeout(() => { st.innerText = dict[currentLang].check; }, 2000);
-            setTimeout(() => { location.reload(); }, 7000);
-        } 
-        else if (result.status === "ad_required") {
-            alert(dict[currentLang].ad);
-            location.reload();
-        }
-        else {
-            alert(result.error);
-            location.reload();
-        }
-    } catch (e) {
-        clearInterval(itv);
-        alert("Connection Error");
-        location.reload();
-    }
-}
+# =========================
+# معالج الدفع الناجح
+# =========================
+async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    lang = user_lang.get(user_id, 'ar')
+    
+    # استخراج معلومات الدفع
+    payload = update.message.successful_payment.invoice_payload
+    parts = payload.split('_')
+    quality = parts[0]
+    stars_paid = int(parts[1])
+    
+    # تسجيل الأرباح (لمعرفتك أنت فقط)
+    add_earnings(stars_paid)
+    
+    url = context.user_data.get('download_url')
+    if not url:
+        await update.message.reply_text("❌ حدث خطأ")
+        return
+    
+    status_msg = await update.message.reply_text("⏳ جاري التحميل بعد الدفع...")
+    
+    try:
+        file_path = await download_media(url, quality, user_id)
+        
+        if file_path and os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                if quality == 'audio':
+                    await context.bot.send_audio(chat_id=user_id, audio=f)
+                else:
+                    await context.bot.send_video(chat_id=user_id, video=f)
+            
+            os.remove(file_path)
+            await status_msg.delete()
+        else:
+            await status_msg.edit_text("❌ فشل التحميل")
+    except Exception as e:
+        logger.error(f"Download error: {e}")
+        await status_msg.edit_text("❌ حدث خطأ في التحميل")
 
-// التعامل مع تثبيت PWA
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('pwaInstall').style.display = 'block';
-});
+# =========================
+# معالج التحقق قبل الدفع
+# =========================
+async def pre_checkout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.pre_checkout_query
+    await query.answer(ok=True)
 
-document.getElementById('pwaInstall').addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') document.getElementById('pwaInstall').style.display = 'none';
-        deferredPrompt = null;
-    }
-});
+# =========================
+# أمر إحصائيات (للمطور فقط) - لمعرفة أرباحك
+# =========================
+async def owner_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    OWNER_ID = 123456789  # ضع معرفك هنا
+    
+    if user_id != OWNER_ID:
+        return
+    
+    stats_cursor.execute("SELECT date, total_stars FROM bot_earnings ORDER BY date DESC LIMIT 7")
+    rows = stats_cursor.fetchall()
+    
+    text = "📊 **إحصائيات الأرباح (آخر 7 أيام):**\n\n"
+    total = 0
+    
+    for date_str, stars in rows:
+        text += f"• {date_str}: ⭐{stars}\n"
+        total += stars
+    
+    text += f"\n💰 **الإجمالي: ⭐{total}**"
+    
+    await update.message.reply_text(text)
 
-if ('serviceWorker' in navigator) { 
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log("SW error:", err)); 
-}
-
-window.onload = () => { updateLang('ar'); };
-</script>
-</body>
-</html>
+# =========================
+# التشغيل الرئيسي
+# =========================
+if __name__ == '__main__':
+    TOKEN = os.getenv('BOT_TOKEN', '8373058261:AAG7_Fo2P_6kv6hHRp5xcl4QghDRpX5TryA')
+    
+    app = ApplicationBuilder().token(TOKEN).build()
+    
+    # إضافة المعالجات
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("language", language_command))
+    app.add_handler(CommandHandler("restart", restart_command))
+    app.add_handler(CommandHandler("stats", owner_stats))  # للمطور فقط
+    
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(PreCheckoutQueryHandler(pre_checkout_handler))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    print("✅ البوت يعمل الآن (المستخدم يدفع وأنت تربح)")
+    app.run_polling()
