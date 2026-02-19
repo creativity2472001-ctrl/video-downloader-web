@@ -176,8 +176,10 @@ def download():
                 logger.error(f"لم يتم العثور على الملف المُنشأ: {file_id}")
                 return jsonify({"error": "❌ فشل في إنشاء الملف"}), 500
             
-            # إنشاء رابط التحميل
-            download_url = f"/api/get/{filename}"
+            # ✅ إنشاء رابط التحميل الكامل (المعدل)
+            # استخدام request.host_url بدلاً من f"http://{request.host}" لضمان البروتوكول الصحيح
+            base_url = request.host_url.rstrip('/')
+            download_url = f"{base_url}/api/get/{filename}"
             
             logger.info(f"تم تحميل الملف بنجاح: {filename}")
             
