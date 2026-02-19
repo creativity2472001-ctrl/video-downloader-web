@@ -43,13 +43,178 @@
             margin: 0 auto;
             width: 100%;
             flex: 1;
+            position: relative;
+        }
+
+        /* القائمة الجانبية (ثلاث شرطات) */
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .menu-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .menu-button i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .menu-sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            padding: 80px 20px 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+
+        .menu-sidebar.open {
+            right: 0;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .close-menu:hover {
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .lang-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+        }
+
+        .help-text-menu {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .help-text-menu p {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-text-menu i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        .install-app {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(40, 167, 69, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .install-app p {
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        /* الشعار */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3);
         }
 
         /* الهيدر */
         .header {
             text-align: center;
             margin-bottom: 30px;
-            padding: 20px 0;
         }
 
         .header h1 {
@@ -79,13 +244,6 @@
             margin-bottom: 20px;
         }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 10px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.95rem;
-        }
-
         .input-group input {
             width: 100%;
             padding: 15px 20px;
@@ -113,12 +271,12 @@
         .mode-selector {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .mode-btn {
             flex: 1;
-            padding: 10px 5px;
+            padding: 12px 5px;
             border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
@@ -139,8 +297,41 @@
             box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
         }
 
-        .mode-btn i {
-            font-size: 1.1rem;
+        /* اختيار الجودة */
+        .quality-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .quality-selector.show {
+            display: grid;
+        }
+
+        .quality-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .quality-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .quality-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
         }
 
         /* زر التحميل الرئيسي */
@@ -201,7 +392,6 @@
 
         .video-info {
             text-align: center;
-            margin-bottom: 20px;
         }
 
         .video-info h3 {
@@ -212,21 +402,23 @@
         .video-info p {
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.95rem;
+            margin-bottom: 15px;
         }
 
         .final-download-link {
             display: block;
             width: 100%;
-            padding: 18px;
-            border-radius: 15px;
+            padding: 16px;
+            border-radius: 12px;
             background: linear-gradient(135deg, #28a745, #34ce57);
             color: white;
             text-decoration: none;
             text-align: center;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
-            margin-top: 15px;
+            border: none;
+            cursor: pointer;
         }
 
         .final-download-link:hover {
@@ -290,27 +482,6 @@
             margin-top: 30px;
         }
 
-        /* رسائل المساعدة */
-        .help-text {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .help-text i {
-            color: var(--primary);
-            margin-left: 5px;
-        }
-
-        .help-text p {
-            margin-bottom: 10px;
-        }
-
-        /* تحسينات للآيفون - تم إزالة flex-direction: column */
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
@@ -319,35 +490,119 @@
             .header h1 {
                 font-size: 2rem;
             }
+
+            .quality-selector {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- القائمة الجانبية (ثلاث شرطات) -->
+    <div class="menu-button" onclick="toggleMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="menu-sidebar" id="menuSidebar">
+        <div class="close-menu" onclick="toggleMenu()">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <!-- اختيار اللغة -->
+        <div class="menu-section">
+            <div class="menu-section-title" data-i18n="language">🌐 اللغة</div>
+            <div class="language-grid">
+                <button class="lang-btn" onclick="changeLanguage('ar')">
+                    🇸🇦 العربية
+                </button>
+                <button class="lang-btn" onclick="changeLanguage('en')">
+                    🇺🇸 English
+                </button>
+                <button class="lang-btn" onclick="changeLanguage('tr')">
+                    🇹🇷 Türkçe
+                </button>
+                <button class="lang-btn" onclick="changeLanguage('ru')">
+                    🇷🇺 Русский
+                </button>
+                <button class="lang-btn" onclick="changeLanguage('fr')">
+                    🇫🇷 Français
+                </button>
+                <button class="lang-btn" onclick="changeLanguage('de')">
+                    🇩🇪 Deutsch
+                </button>
+            </div>
+        </div>
+
+        <!-- المساعدة -->
+        <div class="menu-section">
+            <div class="menu-section-title" data-i18n="how_to_use">📖 طريقة الاستخدام</div>
+            <div class="help-text-menu">
+                <p><i class="fas fa-link"></i> <span data-i18n="help_1">الصق رابط الفيديو في الحقل أعلاه</span></p>
+                <p><i class="fas fa-video"></i> <span data-i18n="help_2">اختر صيغة التحميل (فيديو أو صوت)</span></p>
+                <p><i class="fas fa-sliders-h"></i> <span data-i18n="help_3">اختر الجودة المناسبة</span></p>
+                <p><i class="fas fa-download"></i> <span data-i18n="help_4">اضغط على زر "تحميل"</span></p>
+                <p><i class="fas fa-clock"></i> <span data-i18n="help_5">انتظر حتى تجهيز الملف</span></p>
+                <p><i class="fas fa-save"></i> <span data-i18n="help_6">اضغط على رابط التحميل</span></p>
+            </div>
+        </div>
+
+        <!-- إضافة التطبيق للشاشة الرئيسية -->
+        <div class="menu-section">
+            <div class="install-app">
+                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="add_to_home">لإضافة التطبيق للشاشة الرئيسية: اضغط على زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية"</span></p>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
+        <!-- الشعار -->
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+            </div>
+        </div>
+
         <!-- الهيدر -->
         <div class="header">
             <h1><i class="fas fa-bolt"></i> EasyDown</h1>
-            <p>أسرع وأسهل طريقة لتحميل الفيديوهات</p>
+            <p data-i18n="tagline">أسرع وأسهل طريقة لتحميل الفيديوهات</p>
         </div>
 
         <!-- بطاقة الإدخال -->
         <div class="input-card">
             <div class="input-group">
-                <label><i class="fas fa-link"></i> رابط الفيديو</label>
-                <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
+                <input type="url" id="videoUrl" data-i18n-placeholder="paste_link" placeholder="الصق الرابط هنا" dir="ltr">
             </div>
 
+            <!-- أزرار فيديو/صوت -->
             <div class="mode-selector">
                 <button class="mode-btn active" id="videoMode" onclick="setMode('video')">
-                    <i class="fas fa-video"></i> فيديو MP4
+                    <i class="fas fa-video"></i> <span data-i18n="video">فيديو</span>
                 </button>
                 <button class="mode-btn" id="audioMode" onclick="setMode('audio')">
-                    <i class="fas fa-music"></i> صوت MP3
+                    <i class="fas fa-music"></i> <span data-i18n="audio">صوت</span>
                 </button>
             </div>
 
+            <!-- أزرار اختيار الجودة (تظهر عند اختيار فيديو) -->
+            <div class="quality-selector show" id="qualitySelector">
+                <button class="quality-btn" onclick="selectQuality('480p')">
+                    <span data-i18n="quality_480p">480p</span>
+                </button>
+                <button class="quality-btn" onclick="selectQuality('720p')">
+                    <span data-i18n="quality_720p">720p</span>
+                </button>
+                <button class="quality-btn" onclick="selectQuality('1080p')">
+                    <span data-i18n="quality_1080p">1080p</span>
+                </button>
+                <button class="quality-btn active" onclick="selectQuality('best')">
+                    <span data-i18n="quality_best">أفضل جودة</span>
+                </button>
+            </div>
+
+            <!-- زر التحميل الرئيسي -->
             <button class="download-btn" id="startBtn" onclick="startDownload()">
-                <i class="fas fa-download"></i> تحميل
+                <i class="fas fa-download"></i> <span data-i18n="download">تحميل</span>
             </button>
         </div>
 
@@ -356,44 +611,274 @@
             <div id="statusContent"></div>
         </div>
 
-        <!-- المساعدة -->
-        <div class="help-text">
-            <p><i class="fas fa-info-circle"></i> <strong>طريقة الاستخدام:</strong></p>
-            <p>1️⃣ الصق رابط الفيديو في الحقل أعلاه</p>
-            <p>2️⃣ اختر صيغة التحميل (فيديو أو صوت)</p>
-            <p>3️⃣ اضغط على زر "تحميل"</p>
-            <p>4️⃣ انتظر حتى تجهيز الملف</p>
-            <p>5️⃣ اضغط على رابط التحميل</p>
-            <p><i class="fas fa-mobile-alt"></i> <strong>لأجهزة الآيفون:</strong> بعد الضغط على رابط التحميل، اضغط مطولاً على الفيديو واختر "Save Video"</p>
-        </div>
-
         <!-- المواقع المدعومة -->
         <div class="sites-section">
-            <h3>المواقع المدعومة</h3>
+            <h3 data-i18n="supported_sites">المواقع المدعومة</h3>
             <div class="sites-grid">
-                {% for site in supported_sites %}
-                <div class="site-item" title="{{ site.name }}">
-                    <i class="{{ site.icon }}"></i>
-                    <span>{{ site.name }}</span>
-                </div>
-                {% endfor %}
+                <div class="site-item" title="YouTube"><i class="fab fa-youtube"></i><span>YouTube</span></div>
+                <div class="site-item" title="TikTok"><i class="fab fa-tiktok"></i><span>TikTok</span></div>
+                <div class="site-item" title="Instagram"><i class="fab fa-instagram"></i><span>Instagram</span></div>
+                <div class="site-item" title="Facebook"><i class="fab fa-facebook"></i><span>Facebook</span></div>
+                <div class="site-item" title="Twitter"><i class="fab fa-twitter"></i><span>Twitter/X</span></div>
+                <div class="site-item" title="Snapchat"><i class="fab fa-snapchat"></i><span>Snapchat</span></div>
             </div>
         </div>
 
         <!-- الفوتر -->
         <div class="footer">
-            ©️ 2026 EasyDown - جميع الحقوق محفوظة
+            ©️ 2026 EasyDown - <span data-i18n="footer">جميع الحقوق محفوظة</span>
         </div>
     </div>
 
     <script>
+        // المتغيرات العامة
         let currentMode = 'video';
+        let currentQuality = 'best';
+        let currentLang = 'ar';
 
-        // تغيير وضع التحميل
+        // ترجمة النصوص
+        const translations = {
+            ar: {
+                paste_link: 'الصق الرابط هنا',
+                video: 'فيديو',
+                audio: 'صوت',
+                download: 'تحميل',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'أفضل جودة',
+                select_quality: 'اختر الجودة',
+                downloading: '⏳ جاري التحميل...',
+                ready: 'جاهز للتحميل!',
+                save: 'اضغط هنا للحفظ',
+                error: '❌ حدث خطأ',
+                connection_error: '❌ خطأ في الاتصال',
+                enter_link: '⚠️ الصق الرابط',
+                help_1: 'الصق رابط الفيديو في الحقل أعلاه',
+                help_2: 'اختر صيغة التحميل (فيديو أو صوت)',
+                help_3: 'اختر الجودة المناسبة',
+                help_4: 'اضغط على زر "تحميل"',
+                help_5: 'انتظر حتى تجهيز الملف',
+                help_6: 'اضغط على رابط التحميل',
+                add_to_home: 'لإضافة التطبيق للشاشة الرئيسية: اضغط على زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية"',
+                supported_sites: 'المواقع المدعومة',
+                footer: 'جميع الحقوق محفوظة',
+                tagline: 'أسرع وأسهل طريقة لتحميل الفيديوهات',
+                how_to_use: '📖 طريقة الاستخدام'
+            },
+            en: {
+                paste_link: 'Paste link here',
+                video: 'Video',
+                audio: 'Audio',
+                download: 'Download',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'Best Quality',
+                select_quality: 'Select quality',
+                downloading: '⏳ Downloading...',
+                ready: 'Ready!',
+                save: 'Click here to save',
+                error: '❌ Error',
+                connection_error: '❌ Connection error',
+                enter_link: '⚠️ Paste link',
+                help_1: 'Paste video link above',
+                help_2: 'Choose format (Video/Audio)',
+                help_3: 'Select quality',
+                help_4: 'Click "Download" button',
+                help_5: 'Wait for processing',
+                help_6: 'Click download link',
+                add_to_home: 'Add to home screen: Share → Add to Home Screen',
+                supported_sites: 'Supported sites',
+                footer: 'All rights reserved',
+                tagline: 'Fastest way to download videos',
+                how_to_use: '📖 How to use'
+            },
+            tr: {
+                paste_link: 'Linki yapıştır',
+                video: 'Video',
+                audio: 'Ses',
+                download: 'İndir',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'En iyi kalite',
+                select_quality: 'Kalite seç',
+                downloading: '⏳ İndiriliyor...',
+                ready: 'Hazır!',
+                save: 'İndir',
+                error: '❌ Hata',
+                connection_error: '❌ Bağlantı hatası',
+                enter_link: '⚠️ Link yapıştır',
+                help_1: 'Linki yapıştır',
+                help_2: 'Format seç (Video/Ses)',
+                help_3: 'Kalite seç',
+                help_4: '"İndir" butonuna bas',
+                help_5: 'Bekle',
+                help_6: 'Linke tıkla',
+                add_to_home: 'Ana ekrana ekle: Paylaş → Ana Ekrana Ekle',
+                supported_sites: 'Desteklenen siteler',
+                footer: 'Tüm hakları saklıdır',
+                tagline: 'Video indirmenin en hızlı yolu',
+                how_to_use: '📖 Nasıl kullanılır'
+            },
+            ru: {
+                paste_link: 'Вставьте ссылку',
+                video: 'Видео',
+                audio: 'Аудио',
+                download: 'Скачать',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'Лучшее качество',
+                select_quality: 'Выберите качество',
+                downloading: '⏳ Загрузка...',
+                ready: 'Готово!',
+                save: 'Сохранить',
+                error: '❌ Ошибка',
+                connection_error: '❌ Ошибка соединения',
+                enter_link: '⚠️ Вставьте ссылку',
+                help_1: 'Вставьте ссылку',
+                help_2: 'Выберите формат',
+                help_3: 'Выберите качество',
+                help_4: 'Нажмите "Скачать"',
+                help_5: 'Подождите',
+                help_6: 'Нажмите ссылку',
+                add_to_home: 'На главный экран: Поделиться → На экран «Домой»',
+                supported_sites: 'Поддерживаемые сайты',
+                footer: 'Все права защищены',
+                tagline: 'Быстрая загрузка видео',
+                how_to_use: '📖 Инструкция'
+            },
+            fr: {
+                paste_link: 'Collez le lien',
+                video: 'Vidéo',
+                audio: 'Audio',
+                download: 'Télécharger',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'Meilleure qualité',
+                select_quality: 'Choisir qualité',
+                downloading: '⏳ Téléchargement...',
+                ready: 'Prêt!',
+                save: 'Sauvegarder',
+                error: '❌ Erreur',
+                connection_error: '❌ Erreur connexion',
+                enter_link: '⚠️ Collez le lien',
+                help_1: 'Collez le lien',
+                help_2: 'Choisissez le format',
+                help_3: 'Choisissez la qualité',
+                help_4: 'Cliquez "Télécharger"',
+                help_5: 'Attendez',
+                help_6: 'Cliquez sur le lien',
+                add_to_home: 'Ajouter à l\'écran d\'accueil',
+                supported_sites: 'Sites supportés',
+                footer: 'Tous droits réservés',
+                tagline: 'Téléchargement rapide',
+                how_to_use: '📖 Comment utiliser'
+            },
+            de: {
+                paste_link: 'Link einfügen',
+                video: 'Video',
+                audio: 'Audio',
+                download: 'Herunterladen',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: 'Beste Qualität',
+                select_quality: 'Qualität wählen',
+                downloading: '⏳ Lade...',
+                ready: 'Fertig!',
+                save: 'Speichern',
+                error: '❌ Fehler',
+                connection_error: '❌ Verbindungsfehler',
+                enter_link: '⚠️ Link einfügen',
+                help_1: 'Link einfügen',
+                help_2: 'Format wählen',
+                help_3: 'Qualität wählen',
+                help_4: '"Download" klicken',
+                help_5: 'Warten',
+                help_6: 'Link klicken',
+                add_to_home: 'Zum Home-Bildschirm',
+                supported_sites: 'Unterstützte Seiten',
+                footer: 'Alle Rechte vorbehalten',
+                tagline: 'Schneller Video-Download',
+                how_to_use: '📖 Anleitung'
+            }
+        };
+
+        // تحديث النصوص حسب اللغة
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            // تحديث جميع العناصر التي تحتوي على data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            // تحديث الـ placeholder
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang] && translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+
+            // تحديث عنوان الصفحة
+            document.title = `EasyDown - ${translations[lang].tagline}`;
+        }
+
+        // تغيير اللغة
+        function changeLanguage(lang) {
+            updateLanguage(lang);
+            // إغلاق القائمة بعد اختيار اللغة
+            toggleMenu();
+        }
+
+        // فتح/غلق القائمة الجانبية
+        function toggleMenu() {
+            const menu = document.getElementById('menuSidebar');
+            menu.classList.toggle('open');
+        }
+
+        // إغلاق القائمة عند الضغط خارجها
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('menuSidebar');
+            const menuBtn = document.querySelector('.menu-button');
+            
+            if (!menu.contains(event.target) && !menuBtn.contains(event.target) && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        });
+
+        // تغيير وضع التحميل (فيديو/صوت)
         function setMode(mode) {
             currentMode = mode;
             document.getElementById('videoMode').classList.toggle('active', mode === 'video');
             document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
+            
+            // إظهار/إخفاء اختيار الجودة
+            const qualitySelector = document.getElementById('qualitySelector');
+            if (mode === 'video') {
+                qualitySelector.classList.add('show');
+            } else {
+                qualitySelector.classList.remove('show');
+            }
+        }
+
+        // اختيار الجودة
+        function selectQuality(quality) {
+            currentQuality = quality;
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
         }
 
         // بدأ التحميل
@@ -404,7 +889,7 @@
             const startBtn = document.getElementById('startBtn');
 
             if (!url) {
-                showError('⚠️ يرجى إدخال رابط الفيديو');
+                alert(translations[currentLang].enter_link);
                 return;
             }
 
@@ -413,59 +898,52 @@
             statusContent.innerHTML = `
                 <div class="loader"></div>
                 <div class="video-info">
-                    <p>⏳ جاري التحميل والمعالجة...</p>
+                    <p>${translations[currentLang].downloading}</p>
                 </div>
             `;
             
             startBtn.disabled = true;
 
             try {
-                // ✅ تم التعديل هنا: /download بدلاً من /api/download
-                const response = await fetch('/download', {
+                const response = await fetch('/api/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         url: url, 
-                        mode: currentMode 
+                        mode: currentMode,
+                        quality: currentMode === 'video' ? currentQuality : 'best'
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    // عرض رابط التحميل
                     statusContent.innerHTML = `
                         <div class="video-info">
                             <i class="fas fa-check-circle" style="color: #28a745; font-size: 2.5rem; margin-bottom: 15px;"></i>
-                            <h3>✅ جاهز للتحميل!</h3>
+                            <h3>${translations[currentLang].ready}</h3>
                             <p style="margin-bottom: 10px;">${data.title}</p>
                             <a href="${data.download_url}" class="final-download-link" download>
-                                <i class="fas fa-download"></i> اضغط هنا للحفظ
+                                <i class="fas fa-download"></i> ${translations[currentLang].save}
                             </a>
-                            <p style="font-size: 0.8rem; color: #777; margin-top: 15px;">
-                                <i class="fas fa-mobile-alt"></i> للآيفون: اضغط على الرابط ثم اضغط مطولاً على الفيديو ← Save Video
-                            </p>
                         </div>
                     `;
                 } else {
-                    showError(data.error || '❌ حدث خطأ في التحميل');
+                    statusContent.innerHTML = `
+                        <div class="video-info">
+                            <p class="error-message">${translations[currentLang].error}</p>
+                        </div>
+                    `;
                 }
             } catch (error) {
-                showError('❌ خطأ في الاتصال بالخادم');
-                console.error('Error:', error);
+                statusContent.innerHTML = `
+                    <div class="video-info">
+                        <p class="error-message">${translations[currentLang].connection_error}</p>
+                    </div>
+                `;
             } finally {
                 startBtn.disabled = false;
             }
-        }
-
-        // عرض رسالة خطأ
-        function showError(message) {
-            const statusContent = document.getElementById('statusContent');
-            statusContent.innerHTML = `
-                <div class="video-info">
-                    <p class="error-message">${message}</p>
-                </div>
-            `;
         }
 
         // دعم زر Enter
@@ -474,6 +952,9 @@
                 startDownload();
             }
         });
+
+        // تهيئة الصفحة
+        updateLanguage('ar');
     </script>
 </body>
 </html>
