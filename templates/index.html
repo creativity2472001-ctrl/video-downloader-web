@@ -9,39 +9,189 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/static/manifest.json">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #00d2ff; --secondary: #3a7bd5; --dark: #1a1a2e; --light: #ffffff; --success: #28a745; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, var(--dark), #16213e); color: var(--light); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-x: hidden; }
+        :root { 
+            --primary: #00d2ff; 
+            --secondary: #3a7bd5; 
+            --dark: #1a1a2e; 
+            --light: #ffffff; 
+            --success: #28a745;
+            --error: #ff4d4d;
+            --warning: #ffc107;
+        }
         
-        .container { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); padding: 40px 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); width: 100%; max-width: 550px; text-align: center; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px; position: relative; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
-        h1 { font-size: 2.8rem; margin-bottom: 10px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: -1px; }
-        .tagline { color: #aaa; margin-bottom: 35px; font-size: 1rem; }
+        body { 
+            background: linear-gradient(135deg, var(--dark), #16213e); 
+            color: var(--light); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            overflow-x: hidden; 
+        }
         
-        .input-group { position: relative; margin-bottom: 25px; }
-        input { width: 100%; padding: 18px 25px; border-radius: 35px; border: 2px solid transparent; background: rgba(255,255,255,0.08); color: white; font-size: 1rem; outline: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; }
-        input:focus { background: rgba(255,255,255,0.12); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 210, 255, 0.2); transform: scale(1.02); }
+        .container { 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(15px); 
+            padding: 40px 25px; 
+            border-radius: 25px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
+            width: 100%; 
+            max-width: 550px; 
+            text-align: center; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            margin-top: 20px; 
+            position: relative; 
+        }
         
-        .options { display: flex; gap: 12px; margin-bottom: 25px; }
-        .option-btn { flex: 1; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: white; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; }
-        .option-btn.active { background: linear-gradient(to right, var(--primary), var(--secondary)); border: none; box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3); }
+        h1 { 
+            font-size: 2.8rem; 
+            margin-bottom: 10px; 
+            background: linear-gradient(to right, var(--primary), var(--secondary)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-weight: 800; 
+            letter-spacing: -1px; 
+        }
         
-        .download-btn { width: 100%; padding: 18px; border-radius: 35px; border: none; background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 210, 255, 0.4); }
-        .download-btn:active { transform: translateY(0); }
-        .download-btn:disabled { background: #444; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7; }
+        .tagline { 
+            color: #aaa; 
+            margin-bottom: 35px; 
+            font-size: 1rem; 
+        }
         
-        #status { margin-top: 30px; padding: 20px; border-radius: 20px; display: none; animation: fadeIn 0.5s ease; background: rgba(255,255,255,0.03); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .input-group { 
+            position: relative; 
+            margin-bottom: 25px; 
+        }
         
-        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        input { 
+            width: 100%; 
+            padding: 18px 25px; 
+            border-radius: 35px; 
+            border: 2px solid transparent; 
+            background: rgba(255,255,255,0.08); 
+            color: white; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            text-align: center; 
+        }
         
-        /* 🛠️ الزر السحري للآيفون */
+        input:focus { 
+            background: rgba(255,255,255,0.12); 
+            border-color: var(--primary); 
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.2); 
+            transform: scale(1.02); 
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .options { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 25px; 
+        }
+        
+        .option-btn { 
+            flex: 1; 
+            padding: 14px; 
+            border-radius: 18px; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            background: rgba(255,255,255,0.05); 
+            color: white; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            font-weight: 600; 
+        }
+        
+        .option-btn.active { 
+            background: linear-gradient(to right, var(--primary), var(--secondary)); 
+            border: none; 
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3); 
+        }
+        
+        .download-btn { 
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 35px; 
+            border: none; 
+            background: linear-gradient(to right, var(--primary), var(--secondary)); 
+            color: white; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.4s; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+        }
+        
+        .download-btn:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 15px 30px rgba(0, 210, 255, 0.4); 
+        }
+        
+        .download-btn:active { 
+            transform: translateY(0); 
+        }
+        
+        .download-btn:disabled { 
+            background: #444; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none; 
+            opacity: 0.7; 
+        }
+        
+        #status { 
+            margin-top: 30px; 
+            padding: 20px; 
+            border-radius: 20px; 
+            display: none; 
+            animation: fadeIn 0.5s ease; 
+            background: rgba(255,255,255,0.03); 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .loader { 
+            border: 4px solid rgba(255,255,255,0.1); 
+            border-top: 4px solid var(--primary); 
+            border-radius: 50%; 
+            width: 35px; 
+            height: 35px; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 15px; 
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
         .final-download-link {
             display: inline-flex;
             align-items: center;
@@ -58,18 +208,68 @@
             box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
             animation: pulse 2s infinite;
             width: 100%;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
         }
+        
+        .final-download-link:hover {
+            transform: scale(1.05);
+        }
+        
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
             70% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(40, 167, 69, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
         }
 
-        .supported-sites { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; opacity: 0.6; }
-        .site-icon { font-size: 1.5rem; transition: 0.3s; }
-        .site-icon:hover { opacity: 1; transform: scale(1.2); color: var(--primary); }
+        .supported-sites { 
+            margin-top: 40px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 20px; 
+            opacity: 0.6; 
+        }
+        
+        .site-icon { 
+            font-size: 1.5rem; 
+            transition: 0.3s; 
+        }
+        
+        .site-icon:hover { 
+            opacity: 1; 
+            transform: scale(1.2); 
+            color: var(--primary); 
+        }
 
-        footer { margin-top: auto; padding: 30px; font-size: 0.9rem; color: #666; }
+        footer { 
+            margin-top: auto; 
+            padding: 30px; 
+            font-size: 0.9rem; 
+            color: #666; 
+        }
+        
+        .error-message {
+            color: var(--error);
+            font-weight: bold;
+        }
+        
+        .success-message {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .warning-message {
+            color: var(--warning);
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+            .container { padding: 30px 20px; }
+            .options { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -112,13 +312,7 @@
 
     <script>
         let currentMode = 'video';
-
-        // تسجيل الـ Service Worker (للميزات المتقدمة)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed', err));
-            });
-        }
+        let isProcessing = false;
 
         function setMode(mode) {
             currentMode = mode;
@@ -131,18 +325,21 @@
             const statusDiv = document.getElementById('status');
             const startBtn = document.getElementById('startBtn');
 
+            if (isProcessing) return;
+
             if (!url) {
                 showError('⚠️ يرجى إدخال رابط صحيح');
                 return;
             }
 
             // تحديث الواجهة لبدء العمل
+            isProcessing = true;
             startBtn.disabled = true;
             statusDiv.style.display = 'block';
             statusDiv.innerHTML = '<div class="loader"></div> <p>جاري استخراج البيانات وتحضير الملف...</p>';
 
             try {
-                const response = await fetch('/download', {
+                const response = await fetch('/api/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url, mode: currentMode })
@@ -150,15 +347,15 @@
 
                 const data = await response.json();
 
-                if (data.status === 'success') {
-                    // 🎉 النجاح - عرض زر التحميل النهائي للآيفون
+                if (response.ok && data.status === 'success') {
+                    // 🎉 النجاح - عرض زر التحميل النهائي
                     statusDiv.innerHTML = `
                         <div style="padding: 10px;">
                             <i class="fas fa-check-circle" style="color: var(--success); font-size: 2.5rem; margin-bottom: 15px;"></i>
                             <h3 style="margin-bottom: 5px;">جاهز للتحميل!</h3>
-                            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><LaTex>${data.title}</p>
+                            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.title}</p>
                             
-                            <a href="$</LaTex>{data.download_url}" class="final-download-link" target="_blank" rel="noopener noreferrer">
+                            <a href="${data.download_url}" class="final-download-link" download>
                                 <i class="fas fa-file-download"></i> اضغط هنا للحفظ
                             </a>
                             
@@ -167,18 +364,15 @@
                             </p>
                         </div>
                     `;
-                    startBtn.disabled = false;
                     startBtn.innerHTML = '<i class="fas fa-redo"></i> معالجة رابط آخر';
-                } else if (data.status === 'ad_required') {
-                    // منطق الإعلانات (يمكنك تفعيله)
-                    showError('🎬 يرجى مشاهدة الإعلان أولاً');
-                    startBtn.disabled = false;
                 } else {
                     showError('❌ ' + (data.error || 'فشل في استخراج الفيديو'));
-                    startBtn.disabled = false;
                 }
             } catch (error) {
+                console.error('خطأ:', error);
                 showError('❌ حدث خطأ في الاتصال بالسيرفر');
+            } finally {
+                isProcessing = false;
                 startBtn.disabled = false;
             }
         }
@@ -186,8 +380,15 @@
         function showError(msg) {
             const statusDiv = document.getElementById('status');
             statusDiv.style.display = 'block';
-            statusDiv.innerHTML = `<p style="color: #ff4d4d; font-weight: bold;">${msg}</p>`;
+            statusDiv.innerHTML = `<p class="error-message">${msg}</p>`;
         }
+
+        // السماح بالضغط على Enter لبدء التحميل
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleProcess();
+            }
+        });
     </script>
 </body>
 </html>
