@@ -163,7 +163,7 @@
         }
         .back-btn {
             display: inline-block;
-            margin: 20px 0;
+            margin: 10px 0;
             padding: 12px 25px;
             background: var(--primary);
             color: white;
@@ -176,6 +176,21 @@
             width: 100%;
             border-radius: 15px;
             background: black;
+            margin: 10px 0;
+        }
+        .save-btn {
+            display: block;
+            width: 100%;
+            margin: 15px 0;
+            padding: 18px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
         }
         .main-screen {
             display: block;
@@ -246,13 +261,19 @@
         </div>
     </div>
 
-    <!-- شاشة عرض الفيديو -->
+    <!-- شاشة عرض الفيديو مع زر حفظ -->
     <div id="videoScreen" class="video-screen">
         <div class="container">
             <button class="back-btn" onclick="backToMain()">
-                <i class="fas fa-arrow-right"></i> رجوع للتطبيق
+                <i class="fas fa-arrow-right"></i> رجوع
             </button>
+            
             <video id="videoPlayer" controls></video>
+            
+            <!-- زر حفظ الفيديو -->
+            <a id="saveVideoLink" class="save-btn" download>
+                <i class="fas fa-download"></i> حفظ الفيديو
+            </a>
         </div>
     </div>
 
@@ -265,6 +286,7 @@
         const mainScreen = document.getElementById('mainScreen');
         const videoScreen = document.getElementById('videoScreen');
         const videoPlayer = document.getElementById('videoPlayer');
+        const saveVideoLink = document.getElementById('saveVideoLink');
         const videoUrlInput = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
 
@@ -300,6 +322,7 @@
             mainScreen.classList.remove('hide');
             videoPlayer.pause();
             videoPlayer.src = '';
+            saveVideoLink.href = '';
         }
 
         document.getElementById('downloadBtn').addEventListener('click', async function() {
@@ -335,8 +358,14 @@
                     // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
                     mainScreen.classList.add('hide');
                     videoScreen.classList.add('show');
+                    
+                    // تشغيل الفيديو
                     videoPlayer.src = currentVideoUrl;
                     videoPlayer.play();
+                    
+                    // تحديث رابط الحفظ
+                    saveVideoLink.href = currentVideoUrl;
+                    saveVideoLink.download = data.filename || 'video.mp4';
                     
                     document.getElementById('status').innerHTML = '';
                 } else {
