@@ -26,78 +26,6 @@ ALLOWED_DOMAINS = [
     "snapchat.com", "www.snapchat.com"
 ]
 
-LANGUAGES = {
-    'ar': {
-        'name': 'العربية',
-        'flag': '🇸🇦',
-        'app_name': 'EasyDown',
-        'tagline': 'أسرع وأسهل طريقة لتحميل الفيديوهات',
-        'paste_link': 'الصق الرابط هنا',
-        'video': 'فيديو',
-        'audio': 'صوت',
-        'download': 'تحميل',
-        'quality_480p': '480p',
-        'quality_720p': '720p',
-        'quality_1080p': '1080p',
-        'quality_best': 'أفضل جودة',
-        'select_quality': 'اختر جودة التحميل',
-        'downloading': 'جاري التحميل والمعالجة...',
-        'ready': 'جاهز للتحميل!',
-        'error': '❌ حدث خطأ في التحميل',
-        'connection_error': '❌ خطأ في الاتصال بالخادم',
-        'enter_link': '⚠️ يرجى إدخال رابط الفيديو',
-        'help_title': 'طريقة الاستخدام',
-        'help_1': '1️⃣ الصق رابط الفيديو في الحقل أعلاه',
-        'help_2': '2️⃣ اختر صيغة التحميل (فيديو أو صوت)',
-        'help_3': '3️⃣ اختر الجودة المناسبة',
-        'help_4': '4️⃣ اضغط على زر "تحميل"',
-        'help_5': '5️⃣ انتظر حتى تجهيز الملف',
-        'iphone_help_1': '📱 للآيفون: التحميل بدأ!',
-        'iphone_help_2': '1️⃣ افتح تطبيق "الملفات" (Files)',
-        'iphone_help_3': '2️⃣ اذهب إلى مجلد "تنزيلات" (Downloads)',
-        'iphone_help_4': '3️⃣ اضغط على الفيديو ثم زر المشاركة',
-        'iphone_help_5': '4️⃣ اختر "حفظ الفيديو" (Save Video)',
-        'supported_sites': 'المواقع المدعومة',
-        'footer': 'جميع الحقوق محفوظة'
-    },
-    'en': {
-        'name': 'English',
-        'flag': '🇺🇸',
-        'app_name': 'EasyDown',
-        'tagline': 'Fastest way to download videos',
-        'paste_link': 'Paste link here',
-        'video': 'Video',
-        'audio': 'Audio',
-        'download': 'Download',
-        'quality_480p': '480p',
-        'quality_720p': '720p',
-        'quality_1080p': '1080p',
-        'quality_best': 'Best Quality',
-        'select_quality': 'Select quality',
-        'downloading': 'Downloading and processing...',
-        'ready': 'Ready to download!',
-        'error': '❌ Download error',
-        'connection_error': '❌ Connection error',
-        'enter_link': '⚠️ Please enter video link',
-        'help_title': 'How to use',
-        'help_1': '1️⃣ Paste video link above',
-        'help_2': '2️⃣ Choose format (Video/Audio)',
-        'help_3': '3️⃣ Select quality',
-        'help_4': '4️⃣ Click "Download" button',
-        'help_5': '5️⃣ Wait for processing',
-        'iphone_help_1': '📱 For iPhone: Download started!',
-        'iphone_help_2': '1️⃣ Open "Files" app',
-        'iphone_help_3': '2️⃣ Go to "Downloads" folder',
-        'iphone_help_4': '3️⃣ Tap video then share button',
-        'iphone_help_5': '4️⃣ Choose "Save Video"',
-        'supported_sites': 'Supported sites',
-        'footer': 'All rights reserved'
-    }
-}
-
-def get_text(key, lang='ar'):
-    return LANGUAGES.get(lang, LANGUAGES['ar']).get(key, key)
-
 def cleanup():
     while True:
         try:
@@ -120,35 +48,7 @@ threading.Thread(target=cleanup, daemon=True).start()
 
 @app.route('/')
 def index():
-    lang = request.args.get('lang', session.get('lang', 'ar'))
-    if lang in LANGUAGES:
-        session['lang'] = lang
-    return render_template('index.html', lang=lang, texts=LANGUAGES[lang], languages=LANGUAGES)
-
-@app.route('/set_language/<lang>')
-def set_language(lang):
-    if lang in LANGUAGES:
-        session['lang'] = lang
-    return {'success': True, 'lang': lang}
-
-@app.route('/api/info', methods=['POST'])
-def video_info():
-    try:
-        data = request.get_json()
-        url = data.get('url', '').strip()
-        if not url:
-            return jsonify({'error': '⚠️ الرابط مطلوب'}), 400
-        ydl_opts = {'quiet': True, 'no_warnings': True}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-        return jsonify({
-            'success': True,
-            'title': info.get('title', 'Video'),
-            'duration': info.get('duration', 0)
-        })
-    except Exception as e:
-        logger.error(f"Error in video_info: {e}")
-        return jsonify({'error': str(e)}), 400
+    return render_template('index.html')
 
 @app.route('/api/download', methods=['POST'])
 def download():
@@ -180,16 +80,9 @@ def download():
                 }],
             })
         else:
-            if quality == '480p':
-                ydl_opts['format'] = 'best[height<=480]'
-            elif quality == '720p':
-                ydl_opts['format'] = 'best[height<=720]'
-            elif quality == '1080p':
-                ydl_opts['format'] = 'best[height<=1080]'
-            else:
-                ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+            ydl_opts['format'] = 'best[ext=mp4]/best'
 
-        logger.info(f"بدء تحميل: {url} - {mode} - {quality}")
+        logger.info(f"بدء تحميل: {url}")
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -204,14 +97,13 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # رابط مباشر للفيديو - بدون HTML
-        download_url = f"/video/{filename}"
+        # رابط مباشر للفيديو - فقط mp4
+        download_url = f"/files/{filename}"
 
         logger.info(f"تم التحميل بنجاح: {filename}")
         
         return jsonify({
             'success': True,
-            'direct_download': True,
             'download_url': download_url,
             'title': title,
             'filename': filename
@@ -221,15 +113,19 @@ def download():
         logger.error(f"Error in download: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/video/<filename>')
-def video_file(filename):
-    """مسار مباشر للفيديو - يفتح في Documents مباشرة"""
+@app.route('/files/<filename>')
+def files(filename):
+    """مسار مباشر للفيديو - يفتح في المتصفح مباشرة"""
     path = os.path.join(DOWNLOAD_DIR, filename)
+    
+    if not os.path.exists(path):
+        return 'الملف غير موجود', 404
+    
+    # إرسال الملف كمحتوى فيديو مباشر
     return send_file(
-        path, 
+        path,
         mimetype='video/mp4',
-        as_attachment=False,  # يفتح للمشاهدة
-        download_name=filename
+        as_attachment=False  # هذا يجعله يفتح في المتصفح مباشرة
     )
 
 @app.errorhandler(404)
