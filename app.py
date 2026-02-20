@@ -244,18 +244,85 @@ def get_file(filename):
         if not os.path.exists(path):
             return 'الملف غير موجود', 404
 
-        # تحديد نوع الملف
-        mimetype = 'video/mp4' if filename.endswith('.mp4') else 'audio/mpeg'
+        # ✅ صفحة HTML بسيطة تحتوي على الفيديو + زر رجوع + زر حفظ
+        return f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>EasyDown - الفيديو</title>
+            <style>
+                body {{
+                    background: #1a1a2e;
+                    color: white;
+                    font-family: sans-serif;
+                    text-align: center;
+                    padding: 20px;
+                    margin: 0;
+                }}
+                .back-btn {{
+                    display: inline-block;
+                    margin: 20px auto;
+                    padding: 15px 30px;
+                    background: #00d2ff;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 50px;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                    border: none;
+                    cursor: pointer;
+                }}
+                video {{
+                    width: 100%;
+                    max-width: 600px;
+                    border-radius: 15px;
+                    background: black;
+                    margin: 20px 0;
+                }}
+                .save-btn {{
+                    display: inline-block;
+                    margin: 20px auto;
+                    padding: 18px 40px;
+                    background: #28a745;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 50px;
+                    font-weight: bold;
+                    font-size: 1.3rem;
+                    width: 80%;
+                    max-width: 300px;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <button onclick="history.back()" class="back-btn">🔙 رجوع للتطبيق</button>
+                
+                <video controls autoplay playsinline>
+                    <source src="/get-video/{filename}" type="video/mp4">
+                </video>
+                
+                <a href="/get-video/{filename}" download class="save-btn">💾 حفظ الفيديو</a>
+            </div>
+        </body>
+        </html>
+        '''
 
-        return send_file(
-            path,
-            as_attachment=True,
-            download_name=filename,
-            mimetype=mimetype
-        )
     except Exception as e:
         logger.error(f"Error in get_file: {e}")
         return str(e), 500
+
+@app.route('/get-video/<filename>')
+def get_video_file(filename):
+    """مسار منفصل لتشغيل الفيديو"""
+    path = os.path.join(DOWNLOAD_DIR, filename)
+    return send_file(path, mimetype='video/mp4')
 
 @app.errorhandler(404)
 def not_found(e):
