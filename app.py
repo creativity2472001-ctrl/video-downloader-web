@@ -204,8 +204,8 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
+        # رابط مباشر للفيديو - بدون HTML
         download_url = f"/video/{filename}"
-        page_url = f"/watch/{filename}"
 
         logger.info(f"تم التحميل بنجاح: {filename}")
         
@@ -213,7 +213,6 @@ def download():
             'success': True,
             'direct_download': True,
             'download_url': download_url,
-            'page_url': page_url,
             'title': title,
             'filename': filename
         })
@@ -222,91 +221,16 @@ def download():
         logger.error(f"Error in download: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/watch/<filename>')
-def watch_video(filename):
-    try:
-        path = os.path.join(DOWNLOAD_DIR, filename)
-        if not os.path.exists(path):
-            return 'الملف غير موجود', 404
-
-        return f'''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>EasyDown - فيديو</title>
-            <style>
-                body {{
-                    background: #1a1a2e;
-                    color: white;
-                    font-family: sans-serif;
-                    text-align: center;
-                    padding: 20px;
-                    margin: 0;
-                }}
-                .back-btn {{
-                    display: inline-block;
-                    margin: 20px auto;
-                    padding: 15px 30px;
-                    background: #00d2ff;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 50px;
-                    font-weight: bold;
-                    font-size: 1.2rem;
-                    border: none;
-                    cursor: pointer;
-                }}
-                video {{
-                    width: 100%;
-                    max-width: 600px;
-                    border-radius: 15px;
-                    background: black;
-                    margin: 20px 0;
-                }}
-                .save-btn {{
-                    display: inline-block;
-                    margin: 20px auto;
-                    padding: 18px 40px;
-                    background: #28a745;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 50px;
-                    font-weight: bold;
-                    font-size: 1.3rem;
-                    width: 80%;
-                    max-width: 300px;
-                    border: none;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <button onclick="history.back()" class="back-btn">🔙 رجوع للتطبيق</button>
-                
-                <video controls autoplay playsinline>
-                    <source src="/video/{filename}" type="video/mp4">
-                </video>
-                
-                <a href="/video/{filename}" download class="save-btn">💾 حفظ الفيديو</a>
-            </div>
-        </body>
-        </html>
-        '''
-    except Exception as e:
-        logger.error(f"Error in watch_video: {e}")
-        return str(e), 500
-
 @app.route('/video/<filename>')
 def video_file(filename):
-    """مسار مباشر للفيديو (ما يفتح صفحة جديدة)"""
+    """مسار مباشر للفيديو - يفتح في Documents مباشرة"""
     path = os.path.join(DOWNLOAD_DIR, filename)
-    return send_file(path, mimetype='video/mp4')
+    return send_file(
+        path, 
+        mimetype='video/mp4',
+        as_attachment=False,  # يفتح للمشاهدة
+        download_name=filename
+    )
 
 @app.errorhandler(404)
 def not_found(e):
