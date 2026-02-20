@@ -4,151 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a1a2e">
-    
-    <!-- اسم التطبيق فقط -->
     <title>EasyDown</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-
         :root {
             --primary: #00d2ff;
             --secondary: #3a7bd5;
             --dark: #1a1a2e;
             --success: #28a745;
-            --error: #dc3545;
         }
-
         body {
-            background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             padding: 20px;
         }
-
         .container {
             max-width: 600px;
             margin: 0 auto;
-            width: 100%;
-            position: relative;
         }
-
-        /* القائمة الجانبية */
-        .menu-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 1000;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .menu-button i {
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .menu-sidebar {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 280px;
-            height: 100vh;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1001;
-            transition: right 0.3s ease;
-            padding: 80px 20px 20px;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-        }
-
-        .menu-sidebar.open {
-            right: 0;
-        }
-
-        .close-menu {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-section {
-            margin-bottom: 30px;
-        }
-
-        .menu-section-title {
-            color: var(--primary);
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .language-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .lang-btn {
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .lang-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-        }
-
-        .help-text {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            line-height: 2;
-        }
-
-        .help-text i {
-            color: var(--primary);
-            margin-left: 5px;
-        }
-
-        .install-text {
-            background: rgba(40, 167, 69, 0.2);
-            border-radius: 12px;
-            padding: 15px;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
         .logo {
             width: 100px;
             height: 100px;
@@ -158,10 +38,9 @@
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            margin: 40px auto 10px;
+            margin: 30px auto;
             color: white;
         }
-
         h1 {
             text-align: center;
             font-size: 2.5rem;
@@ -170,70 +49,60 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
         }
-
         .input-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
         .input-wrapper {
             position: relative;
             margin-bottom: 20px;
         }
-
         .input-wrapper input {
             width: 100%;
             padding: 15px 45px 15px 20px;
             border-radius: 15px;
             border: 2px solid transparent;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
             color: white;
             font-size: 1rem;
             direction: ltr;
         }
-
         .input-wrapper input:focus {
             outline: none;
             border-color: var(--primary);
         }
-
         .clear-btn {
             position: absolute;
             top: 50%;
             left: 15px;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255,255,255,0.4);
             cursor: pointer;
             display: none;
         }
-
         .input-wrapper.has-text .clear-btn {
             display: block;
         }
-
         .mode-selector {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
         }
-
         .mode-btn {
             flex: 1;
             padding: 12px;
             border-radius: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
             color: white;
             cursor: pointer;
         }
-
         .mode-btn.active {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
         }
-
         .quality-selector {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -241,24 +110,20 @@
             margin-bottom: 15px;
             display: none;
         }
-
         .quality-selector.show {
             display: grid;
         }
-
         .quality-btn {
             padding: 12px;
             border-radius: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
             color: white;
             cursor: pointer;
         }
-
         .quality-btn.active {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
         }
-
         .download-btn {
             width: 100%;
             padding: 16px;
@@ -270,20 +135,13 @@
             font-weight: bold;
             cursor: pointer;
         }
-
-        .download-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         #status {
             text-align: center;
             margin-top: 15px;
             min-height: 30px;
         }
-
         .loader {
-            border: 4px solid rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(255,255,255,0.1);
             border-top: 4px solid var(--primary);
             border-radius: 50%;
             width: 40px;
@@ -291,261 +149,132 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
+        /* شاشة الفيديو */
+        .video-screen {
+            display: none;
+            margin-top: 20px;
+        }
+        .video-screen.show {
+            display: block;
+        }
+        .back-btn {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        video {
+            width: 100%;
+            border-radius: 15px;
+            background: black;
+        }
+        .main-screen {
+            display: block;
+        }
+        .main-screen.hide {
+            display: none;
+        }
         .sites-grid {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
             margin: 20px 0;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255,255,255,0.5);
         }
-
         .footer {
             text-align: center;
             padding: 20px;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 0.8rem;
+            color: rgba(255,255,255,0.3);
         }
     </style>
 </head>
 <body>
-    <!-- القائمة الجانبية -->
-    <div class="menu-button" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
+    <!-- الشاشة الرئيسية -->
+    <div id="mainScreen" class="main-screen">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h1>EasyDown</h1>
+
+            <div class="input-card">
+                <div class="input-wrapper" id="inputWrapper">
+                    <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
+                    <span class="clear-btn" onclick="clearInput()">
+                        <i class="fas fa-times-circle"></i>
+                    </span>
+                </div>
+
+                <div class="mode-selector">
+                    <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
+                    <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
+                </div>
+
+                <div class="quality-selector show" id="qualitySelector">
+                    <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
+                    <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
+                    <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
+                    <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
+                </div>
+
+                <button class="download-btn" id="downloadBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+
+                <div id="status"></div>
+            </div>
+
+            <div class="sites-grid">
+                <i class="fab fa-youtube"></i>
+                <i class="fab fa-tiktok"></i>
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+
+            <div class="footer">EasyDown</div>
+        </div>
     </div>
 
-    <div class="menu-sidebar" id="menuSidebar">
-        <div class="close-menu" onclick="toggleMenu()">
-            <i class="fas fa-times"></i>
-        </div>
-
-        <!-- اللغات -->
-        <div class="menu-section">
-            <div class="menu-section-title">🌐 اللغة</div>
-            <div class="language-grid">
-                <button class="lang-btn" onclick="changeLanguage('ar')">🇸🇦 العربية</button>
-                <button class="lang-btn" onclick="changeLanguage('en')">🇺🇸 English</button>
-                <button class="lang-btn" onclick="changeLanguage('tr')">🇹🇷 Türkçe</button>
-                <button class="lang-btn" onclick="changeLanguage('ru')">🇷🇺 Русский</button>
-                <button class="lang-btn" onclick="changeLanguage('fr')">🇫🇷 Français</button>
-                <button class="lang-btn" onclick="changeLanguage('de')">🇩🇪 Deutsch</button>
-            </div>
-        </div>
-
-        <!-- المساعدة -->
-        <div class="menu-section">
-            <div class="menu-section-title">📖 المساعدة</div>
-            <div class="help-text">
-                <p><i class="fas fa-link"></i> 1. الصق الرابط</p>
-                <p><i class="fas fa-sliders-h"></i> 2. اختر الجودة</p>
-                <p><i class="fas fa-download"></i> 3. اضغط تحميل</p>
-                <p><i class="fas fa-share"></i> 4. بعد التحميل، اضغط مشاركة</p>
-                <p><i class="fas fa-save"></i> 5. اختر حفظ الفيديو</p>
-                <p><i class="fas fa-arrow-left"></i> 6. ارجع للسهم العلوي</p>
-            </div>
-        </div>
-
-        <!-- التثبيت -->
-        <div class="menu-section">
-            <div class="menu-section-title">📱 تثبيت التطبيق</div>
-            <div class="install-text">
-                <p><i class="fas fa-mobile-alt"></i> 1. اضغط على زر المشاركة (مربع)</p>
-                <p><i class="fas fa-plus-circle"></i> 2. اختر "إضافة إلى الشاشة الرئيسية"</p>
-                <p><i class="fas fa-check-circle"></i> 3. اضغط "إضافة"</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- المحتوى الرئيسي -->
-    <div class="container">
-        <div class="logo">
-            <i class="fas fa-bolt"></i>
-        </div>
-        
-        <h1>EasyDown</h1>
-
-        <div class="input-card">
-            <div class="input-wrapper" id="inputWrapper">
-                <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
-                <span class="clear-btn" onclick="clearInput()">
-                    <i class="fas fa-times-circle"></i>
-                </span>
-            </div>
-
-            <div class="mode-selector">
-                <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
-                <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
-            </div>
-
-            <div class="quality-selector show" id="qualitySelector">
-                <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
-                <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
-                <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
-                <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
-            </div>
-
-            <button class="download-btn" id="downloadBtn">
-                <i class="fas fa-download"></i> تحميل
+    <!-- شاشة عرض الفيديو -->
+    <div id="videoScreen" class="video-screen">
+        <div class="container">
+            <button class="back-btn" onclick="backToMain()">
+                <i class="fas fa-arrow-right"></i> رجوع للتطبيق
             </button>
-
-            <div id="status"></div>
+            <video id="videoPlayer" controls></video>
         </div>
-
-        <div class="sites-grid">
-            <i class="fab fa-youtube"></i>
-            <i class="fab fa-tiktok"></i>
-            <i class="fab fa-instagram"></i>
-            <i class="fab fa-facebook"></i>
-            <i class="fab fa-twitter"></i>
-        </div>
-
-        <div class="footer">EasyDown</div>
     </div>
 
     <script>
-        // الترجمات
-        const translations = {
-            ar: {
-                paste: 'الصق الرابط هنا',
-                video: 'فيديو',
-                audio: 'صوت',
-                download: 'تحميل',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ أفضل',
-                loading: '⏳ جاري التحميل...',
-                success: '✅ تم بدء التحميل!',
-                error: '❌ خطأ',
-                enter_link: '⚠️ الصق الرابط'
-            },
-            en: {
-                paste: 'Paste link here',
-                video: 'Video',
-                audio: 'Audio',
-                download: 'Download',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ Best',
-                loading: '⏳ Loading...',
-                success: '✅ Download started!',
-                error: '❌ Error',
-                enter_link: '⚠️ Paste link'
-            },
-            tr: {
-                paste: 'Linki yapıştır',
-                video: 'Video',
-                audio: 'Ses',
-                download: 'İndir',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ En iyi',
-                loading: '⏳ Yükleniyor...',
-                success: '✅ İndirme başladı!',
-                error: '❌ Hata',
-                enter_link: '⚠️ Link yapıştır'
-            },
-            ru: {
-                paste: 'Вставьте ссылку',
-                video: 'Видео',
-                audio: 'Аудио',
-                download: 'Скачать',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ Лучшее',
-                loading: '⏳ Загрузка...',
-                success: '✅ Загрузка началась!',
-                error: '❌ Ошибка',
-                enter_link: '⚠️ Вставьте ссылку'
-            },
-            fr: {
-                paste: 'Collez le lien',
-                video: 'Vidéo',
-                audio: 'Audio',
-                download: 'Télécharger',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ Meilleur',
-                loading: '⏳ Chargement...',
-                success: '✅ Téléchargement commencé!',
-                error: '❌ Erreur',
-                enter_link: '⚠️ Collez le lien'
-            },
-            de: {
-                paste: 'Link einfügen',
-                video: 'Video',
-                audio: 'Audio',
-                download: 'Herunterladen',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: '✨ Beste',
-                loading: '⏳ Laden...',
-                success: '✅ Download gestartet!',
-                error: '❌ Fehler',
-                enter_link: '⚠️ Link einfügen'
-            }
-        };
-
-        let currentLang = 'ar';
         let currentMode = 'video';
         let currentQuality = 'best';
         let downloading = false;
+        let currentVideoUrl = '';
 
-        const videoUrl = document.getElementById('videoUrl');
+        const mainScreen = document.getElementById('mainScreen');
+        const videoScreen = document.getElementById('videoScreen');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoUrlInput = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
-        const menuSidebar = document.getElementById('menuSidebar');
 
-        function updateLanguage(lang) {
-            currentLang = lang;
-            document.documentElement.lang = lang;
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            
-            videoUrl.placeholder = translations[lang].paste;
-            document.getElementById('videoMode').innerHTML = `🎬 ${translations[lang].video}`;
-            document.getElementById('audioMode').innerHTML = `🎵 ${translations[lang].audio}`;
-            document.getElementById('downloadBtn').innerHTML = `<i class="fas fa-download"></i> ${translations[lang].download}`;
-            
-            const qualityBtns = document.querySelectorAll('.quality-btn');
-            qualityBtns[0].innerHTML = translations[lang].quality_480p;
-            qualityBtns[1].innerHTML = translations[lang].quality_720p;
-            qualityBtns[2].innerHTML = translations[lang].quality_1080p;
-            qualityBtns[3].innerHTML = translations[lang].quality_best;
+        function clearInput() {
+            videoUrlInput.value = '';
+            inputWrapper.classList.remove('has-text');
+            videoUrlInput.focus();
         }
 
-        window.changeLanguage = function(lang) {
-            updateLanguage(lang);
-            toggleMenu();
-        };
-
-        window.toggleMenu = function() {
-            menuSidebar.classList.toggle('open');
-        };
-
-        document.addEventListener('click', function(event) {
-            const menuBtn = document.querySelector('.menu-button');
-            if (!menuSidebar.contains(event.target) && !menuBtn.contains(event.target) && menuSidebar.classList.contains('open')) {
-                menuSidebar.classList.remove('open');
-            }
-        });
-
-        window.clearInput = function() {
-            videoUrl.value = '';
-            inputWrapper.classList.remove('has-text');
-            videoUrl.focus();
-        };
-
-        videoUrl.addEventListener('input', function() {
+        videoUrlInput.addEventListener('input', function() {
             if (this.value.trim()) {
                 inputWrapper.classList.add('has-text');
             } else {
@@ -553,24 +282,31 @@
             }
         });
 
-        window.setMode = function(mode) {
+        function setMode(mode) {
             currentMode = mode;
             document.getElementById('videoMode').classList.toggle('active', mode === 'video');
             document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
             document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
-        };
+        }
 
-        window.selectQuality = function(quality) {
+        function selectQuality(quality) {
             currentQuality = quality;
             document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-        };
+        }
+
+        function backToMain() {
+            videoScreen.classList.remove('show');
+            mainScreen.classList.remove('hide');
+            videoPlayer.pause();
+            videoPlayer.src = '';
+        }
 
         document.getElementById('downloadBtn').addEventListener('click', async function() {
-            const url = videoUrl.value.trim();
+            const url = videoUrlInput.value.trim();
 
             if (!url) {
-                document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].enter_link}</div>`;
+                document.getElementById('status').innerHTML = '⚠️ الصق الرابط';
                 return;
             }
 
@@ -578,7 +314,7 @@
 
             downloading = true;
             this.disabled = true;
-            document.getElementById('status').innerHTML = `<div class="loader"></div><div>${translations[currentLang].loading}</div>`;
+            document.getElementById('status').innerHTML = '<div class="loader"></div>';
 
             try {
                 const response = await fetch('/api/download', {
@@ -594,33 +330,25 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // 🚀 التحميل في نفس الصفحة
-                    const link = document.createElement('a');
-                    link.href = data.download_url;
-                    link.target = '_self';
-                    link.download = data.filename || 'video.mp4';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    currentVideoUrl = data.download_url;
                     
-                    document.getElementById('status').innerHTML = `<div style="color: var(--success)">${translations[currentLang].success}</div>`;
+                    // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
+                    mainScreen.classList.add('hide');
+                    videoScreen.classList.add('show');
+                    videoPlayer.src = currentVideoUrl;
+                    videoPlayer.play();
                     
-                    setTimeout(() => {
-                        document.getElementById('status').innerHTML = '';
-                        clearInput();
-                    }, 2000);
+                    document.getElementById('status').innerHTML = '';
                 } else {
-                    document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].error}</div>`;
+                    document.getElementById('status').innerHTML = '❌ فشل التحميل';
                 }
             } catch {
-                document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].error}</div>`;
+                document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
             } finally {
                 downloading = false;
                 this.disabled = false;
             }
         });
-
-        updateLanguage('ar');
     </script>
 </body>
 </html>
