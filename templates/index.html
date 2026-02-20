@@ -192,6 +192,10 @@
             cursor: pointer;
             text-align: center;
         }
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40,167,69,0.4);
+        }
         .main-screen {
             display: block;
         }
@@ -270,10 +274,10 @@
             
             <video id="videoPlayer" controls></video>
             
-            <!-- زر حفظ الفيديو -->
-            <a id="saveVideoLink" class="save-btn" download>
+            <!-- زر حفظ الفيديو - معدل -->
+            <button class="save-btn" onclick="saveVideo()">
                 <i class="fas fa-download"></i> حفظ الفيديو
-            </a>
+            </button>
         </div>
     </div>
 
@@ -282,11 +286,11 @@
         let currentQuality = 'best';
         let downloading = false;
         let currentVideoUrl = '';
+        let currentFilename = 'video.mp4';
 
         const mainScreen = document.getElementById('mainScreen');
         const videoScreen = document.getElementById('videoScreen');
         const videoPlayer = document.getElementById('videoPlayer');
-        const saveVideoLink = document.getElementById('saveVideoLink');
         const videoUrlInput = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
 
@@ -322,7 +326,23 @@
             mainScreen.classList.remove('hide');
             videoPlayer.pause();
             videoPlayer.src = '';
-            saveVideoLink.href = '';
+        }
+
+        // دالة حفظ الفيديو - طريقة جديدة
+        function saveVideo() {
+            if (!currentVideoUrl) return;
+            
+            // إنشاء رابط تحميل مؤقت
+            const link = document.createElement('a');
+            link.href = currentVideoUrl;
+            link.download = currentFilename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // رسالة تأكيد
+            alert('✅ تم بدء التحميل! اذهب لملفاتك');
         }
 
         document.getElementById('downloadBtn').addEventListener('click', async function() {
@@ -354,6 +374,7 @@
 
                 if (data.success) {
                     currentVideoUrl = data.download_url;
+                    currentFilename = data.filename || 'video.mp4';
                     
                     // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
                     mainScreen.classList.add('hide');
@@ -361,17 +382,15 @@
                     
                     // تشغيل الفيديو
                     videoPlayer.src = currentVideoUrl;
-                    videoPlayer.play();
-                    
-                    // تحديث رابط الحفظ
-                    saveVideoLink.href = currentVideoUrl;
-                    saveVideoLink.download = data.filename || 'video.mp4';
+                    videoPlayer.load();
+                    videoPlayer.play().catch(e => console.log('Autoplay prevented'));
                     
                     document.getElementById('status').innerHTML = '';
                 } else {
                     document.getElementById('status').innerHTML = '❌ فشل التحميل';
                 }
-            } catch {
+            } catch (error) {
+                console.error(error);
                 document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
             } finally {
                 downloading = false;
