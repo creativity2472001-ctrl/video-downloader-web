@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
     
-    <!-- 👇 اسم التطبيق فقط -->
+    <!-- اسم التطبيق فقط -->
     <title>EasyDown</title>
     
-    <!-- 👇 أيقونة التطبيق (اختياري) -->
+    <!-- أيقونة التطبيق -->
     <link rel="apple-touch-icon" href="/static/logo.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -44,8 +44,125 @@
             max-width: 600px;
             margin: 0 auto;
             width: 100%;
+            position: relative;
         }
 
+        /* القائمة الجانبية (الثلاث شرطات) */
+        .menu-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .menu-button i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .menu-sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            padding: 80px 20px 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+
+        .menu-sidebar.open {
+            right: 0;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* قسم اللغة */
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .lang-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        /* صندوق المساعدة */
+        .help-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .help-box i {
+            color: var(--primary);
+            margin-left: 5px;
+        }
+
+        /* تعليمات التثبيت */
+        .install-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(40, 167, 69, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .install-box i {
+            color: var(--success);
+        }
+
+        /* الشعار */
         .logo {
             width: 100px;
             height: 100px;
@@ -55,12 +172,11 @@
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            margin: 40px auto 10px;
+            margin: 30px auto 10px;
             color: white;
             box-shadow: 0 10px 30px rgba(0,210,255,0.3);
         }
 
-        /* 👇 اسم التطبيق فقط - بدون أي كلمات إضافية */
         h1 {
             text-align: center;
             font-size: 2.5rem;
@@ -196,19 +312,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        .help-box {
-            background: rgba(255,255,255,0.03);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .help-box i {
-            color: var(--primary);
-        }
-
         .sites-grid {
             display: flex;
             flex-wrap: wrap;
@@ -227,12 +330,59 @@
     </style>
 </head>
 <body>
+    <!-- القائمة الجانبية -->
+    <div class="menu-button" onclick="toggleMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="menu-sidebar" id="menuSidebar">
+        <div class="close-menu" onclick="toggleMenu()">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <!-- اللغات -->
+        <div class="menu-section">
+            <div class="menu-section-title">🌐 اللغة</div>
+            <div class="language-grid">
+                <button class="lang-btn" onclick="changeLanguage('ar')">🇸🇦 العربية</button>
+                <button class="lang-btn" onclick="changeLanguage('en')">🇺🇸 English</button>
+                <button class="lang-btn" onclick="changeLanguage('tr')">🇹🇷 Türkçe</button>
+                <button class="lang-btn" onclick="changeLanguage('ru')">🇷🇺 Русский</button>
+                <button class="lang-btn" onclick="changeLanguage('fr')">🇫🇷 Français</button>
+                <button class="lang-btn" onclick="changeLanguage('de')">🇩🇪 Deutsch</button>
+            </div>
+        </div>
+
+        <!-- المساعدة -->
+        <div class="menu-section">
+            <div class="menu-section-title">📖 المساعدة</div>
+            <div class="help-box">
+                <p><i class="fas fa-link"></i> 1. الصق الرابط</p>
+                <p><i class="fas fa-sliders-h"></i> 2. اختر الجودة</p>
+                <p><i class="fas fa-download"></i> 3. اضغط تحميل</p>
+                <p><i class="fas fa-share"></i> 4. بعد التحميل، اضغط مشاركة</p>
+                <p><i class="fas fa-save"></i> 5. اختر حفظ الفيديو</p>
+                <p><i class="fas fa-arrow-left"></i> 6. ارجع للسهم العلوي</p>
+            </div>
+        </div>
+
+        <!-- تثبيت التطبيق -->
+        <div class="menu-section">
+            <div class="install-box">
+                <p><i class="fas fa-mobile-alt"></i> <strong>تثبيت التطبيق:</strong></p>
+                <p>1. اضغط على زر المشاركة (مربع)</p>
+                <p>2. اختر "إضافة إلى الشاشة الرئيسية"</p>
+                <p>3. اضغط "إضافة"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
     <div class="container">
         <div class="logo">
             <i class="fas fa-bolt"></i>
         </div>
         
-        <!-- 👇 اسم التطبيق فقط -->
         <h1>EasyDown</h1>
 
         <div class="input-card">
@@ -244,8 +394,8 @@
             </div>
 
             <div class="mode-selector">
-                <button class="mode-btn active" onclick="setMode('video')">🎬 فيديو</button>
-                <button class="mode-btn" onclick="setMode('audio')">🎵 صوت</button>
+                <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
+                <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
             </div>
 
             <div class="quality-selector show" id="qualitySelector">
@@ -262,33 +412,146 @@
             <div id="status"></div>
         </div>
 
-        <!-- 👇 تعليمات الحفظ -->
-        <div class="help-box">
-            <p><i class="fas fa-info-circle"></i> <strong>لحفظ الفيديو:</strong></p>
-            <p>1️⃣ بعد التحميل، اضغط على الفيديو</p>
-            <p>2️⃣ اضغط على زر المشاركة (⬆️ مربع)</p>
-            <p>3️⃣ اختر "حفظ الفيديو"</p>
-            <p>4️⃣ رجع للسهم العلوي الأيسر</p>
-        </div>
-
         <div class="sites-grid">
             <i class="fab fa-youtube"></i>
             <i class="fab fa-tiktok"></i>
             <i class="fab fa-instagram"></i>
             <i class="fab fa-facebook"></i>
             <i class="fab fa-twitter"></i>
+            <i class="fab fa-snapchat"></i>
         </div>
 
         <div class="footer">EasyDown</div>
     </div>
 
     <script>
+        // الترجمات
+        const translations = {
+            ar: {
+                paste: 'الصق الرابط هنا',
+                video: 'فيديو',
+                audio: 'صوت',
+                download: 'تحميل',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: '✨ أفضل',
+                language: '🌐 اللغة',
+                help: '📖 المساعدة',
+                install: '📱 تثبيت',
+                loading: '⏳ جاري التحميل...',
+                success: '✅ تم بدء التحميل!',
+                error: '❌ خطأ',
+                enter_link: '⚠️ الصق الرابط'
+            },
+            en: {
+                paste: 'Paste link here',
+                video: 'Video',
+                audio: 'Audio',
+                download: 'Download',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: '✨ Best',
+                language: '🌐 Language',
+                help: '📖 Help',
+                install: '📱 Install',
+                loading: '⏳ Loading...',
+                success: '✅ Download started!',
+                error: '❌ Error',
+                enter_link: '⚠️ Paste link'
+            },
+            tr: {
+                paste: 'Linki yapıştır',
+                video: 'Video',
+                audio: 'Ses',
+                download: 'İndir',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: '✨ En iyi',
+                language: '🌐 Dil',
+                help: '📖 Yardım',
+                install: '📱 Yükle',
+                loading: '⏳ Yükleniyor...',
+                success: '✅ İndirme başladı!',
+                error: '❌ Hata',
+                enter_link: '⚠️ Link yapıştır'
+            },
+            ru: {
+                paste: 'Вставьте ссылку',
+                video: 'Видео',
+                audio: 'Аудио',
+                download: 'Скачать',
+                quality_480p: '480p',
+                quality_720p: '720p',
+                quality_1080p: '1080p',
+                quality_best: '✨ Лучшее',
+                language: '🌐 Язык',
+                help: '📖 Помощь',
+                install: '📱 Установить',
+                loading: '⏳ Загрузка...',
+                success: '✅ Загрузка началась!',
+                error: '❌ Ошибка',
+                enter_link: '⚠️ Вставьте ссылку'
+            }
+        };
+
+        let currentLang = 'ar';
         let currentMode = 'video';
         let currentQuality = 'best';
         let downloading = false;
 
+        // عناصر DOM
         const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
+        const menuSidebar = document.getElementById('menuSidebar');
+
+        // تحديث النصوص حسب اللغة
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            videoUrl.placeholder = translations[lang].paste;
+            document.getElementById('videoMode').innerHTML = `🎬 ${translations[lang].video}`;
+            document.getElementById('audioMode').innerHTML = `🎵 ${translations[lang].audio}`;
+            document.getElementById('downloadBtn').innerHTML = `<i class="fas fa-download"></i> ${translations[lang].download}`;
+            
+            document.querySelectorAll('.quality-btn')[0].innerHTML = translations[lang].quality_480p;
+            document.querySelectorAll('.quality-btn')[1].innerHTML = translations[lang].quality_720p;
+            document.querySelectorAll('.quality-btn')[2].innerHTML = translations[lang].quality_1080p;
+            document.querySelectorAll('.quality-btn')[3].innerHTML = translations[lang].quality_best;
+            
+            document.querySelector('.menu-section-title:first-child').innerHTML = translations[lang].language;
+            document.querySelector('.menu-section-title:nth-child(2)').innerHTML = translations[lang].help;
+        }
+
+        // تغيير اللغة
+        window.changeLanguage = function(lang) {
+            updateLanguage(lang);
+            toggleMenu();
+        };
+
+        // فتح/غلق القائمة
+        window.toggleMenu = function() {
+            menuSidebar.classList.toggle('open');
+        };
+
+        // إغلاق القائمة عند الضغط خارجها
+        document.addEventListener('click', function(event) {
+            const menuBtn = document.querySelector('.menu-button');
+            if (!menuSidebar.contains(event.target) && !menuBtn.contains(event.target) && menuSidebar.classList.contains('open')) {
+                menuSidebar.classList.remove('open');
+            }
+        });
+
+        // مسح النص
+        window.clearInput = function() {
+            videoUrl.value = '';
+            inputWrapper.classList.remove('has-text');
+            videoUrl.focus();
+        };
 
         videoUrl.addEventListener('input', function() {
             if (this.value.trim()) {
@@ -298,16 +561,10 @@
             }
         });
 
-        window.clearInput = function() {
-            videoUrl.value = '';
-            inputWrapper.classList.remove('has-text');
-            videoUrl.focus();
-        };
-
         window.setMode = function(mode) {
             currentMode = mode;
-            document.querySelectorAll('.mode-btn')[0].classList.toggle('active', mode === 'video');
-            document.querySelectorAll('.mode-btn')[1].classList.toggle('active', mode === 'audio');
+            document.getElementById('videoMode').classList.toggle('active', mode === 'video');
+            document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
             document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
         };
 
@@ -321,7 +578,7 @@
             const url = videoUrl.value.trim();
 
             if (!url) {
-                document.getElementById('status').innerHTML = '<div style="color: var(--error)">⚠️ الصق الرابط</div>';
+                document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].enter_link}</div>`;
                 return;
             }
 
@@ -329,7 +586,7 @@
 
             downloading = true;
             this.disabled = true;
-            document.getElementById('status').innerHTML = '<div class="loader"></div>';
+            document.getElementById('status').innerHTML = `<div class="loader"></div><div>${translations[currentLang].loading}</div>`;
 
             try {
                 const response = await fetch('/api/download', {
@@ -345,31 +602,33 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // 🚀 التحميل في نفس الصفحة
+                    // 🚀 التحميل في نفس الصفحة مع إمكانية الرجوع
                     const link = document.createElement('a');
                     link.href = data.download_url;
-                    link.download = data.filename || 'video.mp4';
-                    link.target = '_self';
+                    link.target = '_parent';
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
                     
-                    document.getElementById('status').innerHTML = '<div style="color: var(--success)">✅ تم</div>';
+                    document.getElementById('status').innerHTML = `<div style="color: var(--success)">${translations[currentLang].success}</div>`;
                     
                     setTimeout(() => {
                         document.getElementById('status').innerHTML = '';
                         clearInput();
                     }, 2000);
                 } else {
-                    document.getElementById('status').innerHTML = `<div style="color: var(--error)">❌ ${data.error || 'خطأ'}</div>`;
+                    document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].error}</div>`;
                 }
             } catch {
-                document.getElementById('status').innerHTML = '<div style="color: var(--error)">❌ خطأ</div>';
+                document.getElementById('status').innerHTML = `<div style="color: var(--error)">${translations[currentLang].error}</div>`;
             } finally {
                 downloading = false;
                 this.disabled = false;
             }
         });
+
+        // اللغة الافتراضية
+        updateLanguage('ar');
     </script>
 </body>
 </html>
