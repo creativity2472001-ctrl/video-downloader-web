@@ -299,11 +299,12 @@ def download():
         file_id = uuid.uuid4().hex[:8]
         base = os.path.join(DOWNLOAD_DIR, file_id)
 
-        # إعدادات yt-dlp
+        # إعدادات yt-dlp مع ملف الكوكيز
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'cookiefile': 'cookies.txt',  # ملف الكوكيز للمواقع المحمية
         }
 
         if mode == 'audio':
