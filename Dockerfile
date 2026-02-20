@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y ffmpeg
+# تثبيت FFmpeg و Node.js (ضروري ليوتيوب)
+RUN apt-get update && apt-get install -y ffmpeg nodejs npm
 
 WORKDIR /app
 
