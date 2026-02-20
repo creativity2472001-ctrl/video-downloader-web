@@ -23,7 +23,6 @@
             --light: #ffffff;
             --success: #28a745;
             --error: #dc3545;
-            --gray: #6c757d;
         }
 
         body {
@@ -39,98 +38,34 @@
             max-width: 600px;
             margin: 0 auto;
             width: 100%;
-            flex: 1;
-            position: relative;
-        }
-
-        .menu-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 1000;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .menu-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .menu-sidebar {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 280px;
-            height: 100vh;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1001;
-            transition: right 0.3s ease;
-            padding: 80px 20px 20px;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-        }
-
-        .menu-sidebar.open {
-            right: 0;
-        }
-
-        .close-menu {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s ease;
-        }
-
-        .close-menu:hover {
-            color: white;
-            transform: rotate(90deg);
         }
 
         .logo-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            margin: 40px 0 20px;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
+            width: 100px;
+            height: 100px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 3rem;
             color: white;
-            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3);
+            box-shadow: 0 15px 30px rgba(0, 210, 255, 0.3);
         }
 
-        .header {
+        h1 {
             text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
             font-size: 2.5rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
+            margin-bottom: 30px;
         }
 
         .input-card {
@@ -138,7 +73,6 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 25px;
-            margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -155,7 +89,6 @@
             background: rgba(255, 255, 255, 0.1);
             color: white;
             font-size: 1rem;
-            transition: all 0.3s ease;
             direction: ltr;
             text-align: left;
         }
@@ -178,13 +111,7 @@
             color: rgba(255, 255, 255, 0.4);
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.3s ease;
             display: none;
-            z-index: 10;
-        }
-        
-        .clear-input-btn:hover {
-            color: white;
         }
 
         .input-wrapper.has-text .clear-input-btn {
@@ -199,14 +126,12 @@
 
         .mode-btn {
             flex: 1;
-            padding: 12px 5px;
+            padding: 12px;
             border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
             color: white;
-            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -216,8 +141,6 @@
         .mode-btn.active {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
         }
 
         .quality-selector {
@@ -239,16 +162,6 @@
             background: rgba(255, 255, 255, 0.05);
             color: white;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-
-        .quality-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
         }
 
         .quality-btn.active {
@@ -266,17 +179,11 @@
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
-        }
-
-        .download-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 210, 255, 0.4);
         }
 
         .download-btn:disabled {
@@ -287,7 +194,7 @@
         #status {
             margin-top: 20px;
             text-align: center;
-            min-height: 50px;
+            min-height: 40px;
         }
 
         .loader {
@@ -305,25 +212,9 @@
             100% { transform: rotate(360deg); }
         }
 
-        .success-message {
-            color: var(--success);
-            font-weight: bold;
-        }
-
-        .error-message {
-            color: var(--error);
-            font-weight: bold;
-        }
-
         .sites-section {
             margin-top: 30px;
             text-align: center;
-        }
-
-        .sites-section h3 {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
         }
 
         .sites-grid {
@@ -331,6 +222,7 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
+            margin-top: 15px;
         }
 
         .site-item {
@@ -339,7 +231,6 @@
             align-items: center;
             gap: 5px;
             color: rgba(255, 255, 255, 0.5);
-            transition: all 0.3s ease;
         }
 
         .site-item i {
@@ -350,31 +241,15 @@
             font-size: 0.8rem;
         }
 
-        .site-item:hover {
-            color: var(--primary);
-            transform: translateY(-2px);
-        }
-
         .footer {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             color: rgba(255, 255, 255, 0.3);
             font-size: 0.8rem;
-            margin-top: 30px;
         }
     </style>
 </head>
 <body>
-    <div class="menu-button" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-
-    <div class="menu-sidebar" id="menuSidebar">
-        <div class="close-menu" onclick="toggleMenu()">
-            <i class="fas fa-times"></i>
-        </div>
-    </div>
-
     <div class="container">
         <div class="logo-container">
             <div class="logo">
@@ -382,9 +257,7 @@
             </div>
         </div>
 
-        <div class="header">
-            <h1>EasyDown</h1>
-        </div>
+        <h1>EasyDown</h1>
 
         <div class="input-card">
             <div class="input-wrapper" id="inputWrapper">
@@ -418,46 +291,32 @@
         </div>
 
         <div class="sites-section">
-            <h3>المواقع المدعومة</h3>
             <div class="sites-grid">
-                <div class="site-item" title="YouTube"><i class="fab fa-youtube"></i><span>YouTube</span></div>
-                <div class="site-item" title="TikTok"><i class="fab fa-tiktok"></i><span>TikTok</span></div>
-                <div class="site-item" title="Instagram"><i class="fab fa-instagram"></i><span>Instagram</span></div>
-                <div class="site-item" title="Facebook"><i class="fab fa-facebook"></i><span>Facebook</span></div>
-                <div class="site-item" title="Twitter"><i class="fab fa-twitter"></i><span>Twitter/X</span></div>
-                <div class="site-item" title="Snapchat"><i class="fab fa-snapchat"></i><span>Snapchat</span></div>
+                <div class="site-item"><i class="fab fa-youtube"></i><span>YouTube</span></div>
+                <div class="site-item"><i class="fab fa-tiktok"></i><span>TikTok</span></div>
+                <div class="site-item"><i class="fab fa-instagram"></i><span>Instagram</span></div>
+                <div class="site-item"><i class="fab fa-facebook"></i><span>Facebook</span></div>
+                <div class="site-item"><i class="fab fa-twitter"></i><span>Twitter</span></div>
+                <div class="site-item"><i class="fab fa-snapchat"></i><span>Snapchat</span></div>
             </div>
         </div>
 
         <div class="footer">
-            ©️ 2026 EasyDown
+            EasyDown © 2026
         </div>
     </div>
 
     <script>
         let currentMode = 'video';
         let currentQuality = 'best';
-        let downloadInProgress = false;
+        let downloading = false;
 
-        const videoUrlInput = document.getElementById('videoUrl');
+        const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
-        const clearBtn = document.getElementById('clearInputBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         const statusDiv = document.getElementById('status');
-        const menuSidebar = document.getElementById('menuSidebar');
 
-        function toggleMenu() {
-            menuSidebar.classList.toggle('open');
-        }
-
-        document.addEventListener('click', function(event) {
-            const menuBtn = document.querySelector('.menu-button');
-            if (!menuSidebar.contains(event.target) && !menuBtn.contains(event.target) && menuSidebar.classList.contains('open')) {
-                menuSidebar.classList.remove('open');
-            }
-        });
-
-        videoUrlInput.addEventListener('input', function() {
+        videoUrl.addEventListener('input', function() {
             if (this.value.trim()) {
                 inputWrapper.classList.add('has-text');
             } else {
@@ -466,9 +325,9 @@
         });
 
         window.clearInput = function() {
-            videoUrlInput.value = '';
+            videoUrl.value = '';
             inputWrapper.classList.remove('has-text');
-            videoUrlInput.focus();
+            videoUrl.focus();
         };
 
         window.setMode = function(mode) {
@@ -484,27 +343,19 @@
             event.target.classList.add('active');
         };
 
-        function showStatus(message, type) {
-            statusDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
-        }
-
-        function showLoader() {
-            statusDiv.innerHTML = '<div class="loader"></div><div>جاري التحميل...</div>';
-        }
-
         downloadBtn.addEventListener('click', async function() {
-            const url = videoUrlInput.value.trim();
+            const url = videoUrl.value.trim();
 
             if (!url) {
-                showStatus('⚠️ الصق الرابط أولاً', 'error');
+                statusDiv.innerHTML = '<div style="color: var(--error)">⚠️ الصق الرابط أولاً</div>';
                 return;
             }
 
-            if (downloadInProgress) return;
+            if (downloading) return;
 
-            downloadInProgress = true;
+            downloading = true;
             downloadBtn.disabled = true;
-            showLoader();
+            statusDiv.innerHTML = '<div class="loader"></div><div>جاري التحميل...</div>';
 
             try {
                 const response = await fetch('/api/download', {
@@ -520,32 +371,32 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // ✅ تحميل مباشر بدون "اضغط هنا للحفظ"
+                    // تحميل مباشر بدون فتح تطبيقات خارجية
                     const link = document.createElement('a');
                     link.href = data.download_url;
                     link.download = data.filename || 'video.mp4';
-                    link.style.display = 'none';
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
-                    // ✅ رسالة نجاح بسيطة
-                    showStatus('✅ تم بدء التحميل!', 'success');
                     
-                    // ✅ مسح الرابط تلقائياً بعد التحميل
+                    statusDiv.innerHTML = '<div style="color: var(--success)">✅ تم بدء التحميل!</div>';
+                    
+                    // مسح الرابط بعد ثانيتين
                     setTimeout(clearInput, 2000);
                 } else {
-                    showStatus('❌ ' + (data.error || 'فشل التحميل'), 'error');
+                    statusDiv.innerHTML = `<div style="color: var(--error)">❌ ${data.error || 'فشل التحميل'}</div>`;
                 }
             } catch (error) {
-                showStatus('❌ خطأ في الاتصال', 'error');
+                statusDiv.innerHTML = '<div style="color: var(--error)">❌ خطأ في الاتصال</div>';
             } finally {
-                downloadInProgress = false;
+                downloading = false;
                 downloadBtn.disabled = false;
             }
         });
 
-        videoUrlInput.addEventListener('keypress', function(e) {
+        videoUrl.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 downloadBtn.click();
             }
