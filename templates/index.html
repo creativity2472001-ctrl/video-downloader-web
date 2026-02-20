@@ -7,8 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
     
-    <!-- 👇 اسم التطبيق فقط عند الإضافة للشاشة الرئيسية -->
+    <!-- 👇 اسم التطبيق فقط -->
     <title>EasyDown</title>
+    
+    <!-- 👇 أيقونة التطبيق (اختياري) -->
     <link rel="apple-touch-icon" href="/static/logo.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -53,11 +55,12 @@
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            margin: 30px auto 10px;
+            margin: 40px auto 10px;
             color: white;
             box-shadow: 0 10px 30px rgba(0,210,255,0.3);
         }
 
+        /* 👇 اسم التطبيق فقط - بدون أي كلمات إضافية */
         h1 {
             text-align: center;
             font-size: 2.5rem;
@@ -165,7 +168,6 @@
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 15px;
         }
 
         .download-btn:disabled {
@@ -175,7 +177,8 @@
 
         #status {
             text-align: center;
-            min-height: 40px;
+            margin-top: 15px;
+            min-height: 30px;
         }
 
         .loader {
@@ -185,7 +188,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto;
         }
 
         @keyframes spin {
@@ -204,7 +207,6 @@
 
         .help-box i {
             color: var(--primary);
-            margin-left: 5px;
         }
 
         .sites-grid {
@@ -230,26 +232,27 @@
             <i class="fas fa-bolt"></i>
         </div>
         
+        <!-- 👇 اسم التطبيق فقط -->
         <h1>EasyDown</h1>
 
         <div class="input-card">
             <div class="input-wrapper" id="inputWrapper">
                 <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
-                <span class="clear-btn" id="clearBtn" onclick="clearInput()">
+                <span class="clear-btn" onclick="clearInput()">
                     <i class="fas fa-times-circle"></i>
                 </span>
             </div>
 
             <div class="mode-selector">
-                <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
-                <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
+                <button class="mode-btn active" onclick="setMode('video')">🎬 فيديو</button>
+                <button class="mode-btn" onclick="setMode('audio')">🎵 صوت</button>
             </div>
 
             <div class="quality-selector show" id="qualitySelector">
                 <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
                 <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
                 <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
-                <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل جودة</button>
+                <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
             </div>
 
             <button class="download-btn" id="downloadBtn">
@@ -259,24 +262,24 @@
             <div id="status"></div>
         </div>
 
-        <!-- 👇 صندوق المساعدة مع شرح الحفظ -->
+        <!-- 👇 تعليمات الحفظ -->
         <div class="help-box">
-            <p><i class="fas fa-info-circle"></i> <strong>كيف تحفظ الفيديو؟</strong></p>
-            <p>1️⃣ بعد التحميل، افتح الفيديو</p>
-            <p>2️⃣ اضغط على <strong>زر المشاركة (مربع مع سهم)</strong></p>
-            <p>3️⃣ اختر <strong>حفظ الفيديو</strong> أو <strong>Save Video</strong></p>
-            <p style="color: var(--primary); margin-top: 10px;">💡 إذا فتح معك تطبيق آخر، ارجع للسهم العلوي الأيسر</p>
+            <p><i class="fas fa-info-circle"></i> <strong>لحفظ الفيديو:</strong></p>
+            <p>1️⃣ بعد التحميل، اضغط على الفيديو</p>
+            <p>2️⃣ اضغط على زر المشاركة (⬆️ مربع)</p>
+            <p>3️⃣ اختر "حفظ الفيديو"</p>
+            <p>4️⃣ رجع للسهم العلوي الأيسر</p>
         </div>
 
         <div class="sites-grid">
-            <div><i class="fab fa-youtube"></i> YouTube</div>
-            <div><i class="fab fa-tiktok"></i> TikTok</div>
-            <div><i class="fab fa-instagram"></i> Instagram</div>
-            <div><i class="fab fa-facebook"></i> Facebook</div>
-            <div><i class="fab fa-twitter"></i> Twitter</div>
+            <i class="fab fa-youtube"></i>
+            <i class="fab fa-tiktok"></i>
+            <i class="fab fa-instagram"></i>
+            <i class="fab fa-facebook"></i>
+            <i class="fab fa-twitter"></i>
         </div>
 
-        <div class="footer">EasyDown © 2026</div>
+        <div class="footer">EasyDown</div>
     </div>
 
     <script>
@@ -286,8 +289,6 @@
 
         const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const statusDiv = document.getElementById('status');
 
         videoUrl.addEventListener('input', function() {
             if (this.value.trim()) {
@@ -305,8 +306,8 @@
 
         window.setMode = function(mode) {
             currentMode = mode;
-            document.getElementById('videoMode').classList.toggle('active', mode === 'video');
-            document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
+            document.querySelectorAll('.mode-btn')[0].classList.toggle('active', mode === 'video');
+            document.querySelectorAll('.mode-btn')[1].classList.toggle('active', mode === 'audio');
             document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
         };
 
@@ -316,19 +317,19 @@
             event.target.classList.add('active');
         };
 
-        downloadBtn.addEventListener('click', async function() {
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
             const url = videoUrl.value.trim();
 
             if (!url) {
-                statusDiv.innerHTML = '<div style="color: var(--error)">⚠️ الصق الرابط أولاً</div>';
+                document.getElementById('status').innerHTML = '<div style="color: var(--error)">⚠️ الصق الرابط</div>';
                 return;
             }
 
             if (downloading) return;
 
             downloading = true;
-            downloadBtn.disabled = true;
-            statusDiv.innerHTML = '<div class="loader"></div><div>جاري التحميل...</div>';
+            this.disabled = true;
+            document.getElementById('status').innerHTML = '<div class="loader"></div>';
 
             try {
                 const response = await fetch('/api/download', {
@@ -344,36 +345,29 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // 🚀 السر هنا: التحميل في نفس الصفحة
+                    // 🚀 التحميل في نفس الصفحة
                     const link = document.createElement('a');
                     link.href = data.download_url;
                     link.download = data.filename || 'video.mp4';
-                    link.target = '_self';  // مهم جداً: يفتح في نفس الصفحة
-                    link.style.display = 'none';
+                    link.target = '_self';
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
                     
-                    statusDiv.innerHTML = '<div style="color: var(--success)">✅ تم بدء التحميل!</div>';
+                    document.getElementById('status').innerHTML = '<div style="color: var(--success)">✅ تم</div>';
                     
                     setTimeout(() => {
-                        statusDiv.innerHTML = '';
+                        document.getElementById('status').innerHTML = '';
                         clearInput();
-                    }, 3000);
+                    }, 2000);
                 } else {
-                    statusDiv.innerHTML = `<div style="color: var(--error)">❌ ${data.error || 'فشل'}</div>`;
+                    document.getElementById('status').innerHTML = `<div style="color: var(--error)">❌ ${data.error || 'خطأ'}</div>`;
                 }
-            } catch (error) {
-                statusDiv.innerHTML = '<div style="color: var(--error)">❌ خطأ في الاتصال</div>';
+            } catch {
+                document.getElementById('status').innerHTML = '<div style="color: var(--error)">❌ خطأ</div>';
             } finally {
                 downloading = false;
-                downloadBtn.disabled = false;
-            }
-        });
-
-        videoUrl.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                downloadBtn.click();
+                this.disabled = false;
             }
         });
     </script>
