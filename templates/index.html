@@ -139,6 +139,7 @@
             text-align: center;
             margin-top: 15px;
             min-height: 30px;
+            color: #fff;
         }
         .loader {
             border: 4px solid rgba(255,255,255,0.1);
@@ -191,10 +192,7 @@
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-        }
-        .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40,167,69,0.4);
+            text-decoration: none; /* لإزالة الخط تحت الرابط */
         }
         .main-screen {
             display: block;
@@ -214,6 +212,15 @@
             text-align: center;
             padding: 20px;
             color: rgba(255,255,255,0.3);
+        }
+        #instructions {
+            text-align: center;
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -272,12 +279,15 @@
                 <i class="fas fa-arrow-right"></i> رجوع
             </button>
             
-            <video id="videoPlayer" controls></video>
+            <video id="videoPlayer" controls playsinline></video> <!-- playsinline مهمة لـ iOS -->
             
-            <!-- زر حفظ الفيديو - معدل -->
-            <button class="save-btn" onclick="saveVideo()">
+            <!-- زر حفظ الفيديو (تم تعديله) -->
+            <a id="saveVideoLink" class="save-btn">
                 <i class="fas fa-download"></i> حفظ الفيديو
-            </button>
+            </a>
+
+            <!-- رسالة الإرشادات -->
+            <div id="instructions"></div>
         </div>
     </div>
 
@@ -286,13 +296,15 @@
         let currentQuality = 'best';
         let downloading = false;
         let currentVideoUrl = '';
-        let currentFilename = 'video.mp4';
 
         const mainScreen = document.getElementById('mainScreen');
         const videoScreen = document.getElementById('videoScreen');
         const videoPlayer = document.getElementById('videoPlayer');
+        const saveVideoLink = document.getElementById('saveVideoLink');
         const videoUrlInput = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
+        const statusDiv = document.getElementById('status');
+        const instructionsDiv = document.getElementById('instructions');
 
         function clearInput() {
             videoUrlInput.value = '';
@@ -326,30 +338,15 @@
             mainScreen.classList.remove('hide');
             videoPlayer.pause();
             videoPlayer.src = '';
-        }
-
-        // دالة حفظ الفيديو - طريقة جديدة
-        function saveVideo() {
-            if (!currentVideoUrl) return;
-            
-            // إنشاء رابط تحميل مؤقت
-            const link = document.createElement('a');
-            link.href = currentVideoUrl;
-            link.download = currentFilename;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // رسالة تأكيد
-            alert('✅ تم بدء التحميل! اذهب لملفاتك');
+            saveVideoLink.href = '#'; // إعادة تعيين الرابط
+            instructionsDiv.innerHTML = ''; // مسح الإرشادات
         }
 
         document.getElementById('downloadBtn').addEventListener('click', async function() {
             const url = videoUrlInput.value.trim();
 
             if (!url) {
-                document.getElementById('status').innerHTML = '⚠️ الصق الرابط';
+                statusDiv.innerHTML = '⚠️ الصق الرابط';
                 return;
             }
 
@@ -357,7 +354,7 @@
 
             downloading = true;
             this.disabled = true;
-            document.getElementById('status').innerHTML = '<div class="loader"></div>';
+            statusDiv.innerHTML = '<div class="loader"></div>';
 
             try {
                 const response = await fetch('/api/download', {
@@ -374,24 +371,37 @@
 
                 if (data.success) {
                     currentVideoUrl = data.download_url;
-                    currentFilename = data.filename || 'video.mp4';
                     
-                    // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
                     mainScreen.classList.add('hide');
                     videoScreen.classList.add('show');
                     
-                    // تشغيل الفيديو
                     videoPlayer.src = currentVideoUrl;
-                    videoPlayer.load();
-                    videoPlayer.play().catch(e => console.log('Autoplay prevented'));
+                    videoPlayer.play();
                     
-                    document.getElementById('status').innerHTML = '';
+                    // --- التعديل الجوهري ---
+                    // 1. إنشاء رابط التنزيل الإجباري الذي يشير للواجهة الخلفية
+                    const forceDownloadUrl = `/api/force-download?url=<LaTex>${encodeURIComponent(currentVideoUrl)}&filename=$</LaTex>{encodeURIComponent(data.filename || 'video.mp4')}`;
+                    
+                    // 2. ضبط الرابط على زر الحفظ
+                    saveVideoLink.href = forceDownloadUrl;
+                    
+                    // 3. إضافة سمة download (للمتصفحات التي تدعمها)
+                    saveVideoLink.setAttribute('download', data.filename || 'video.mp4');
+
+                    // 4. إضافة رسالة إرشادية عند الضغط
+                    saveVideoLink.onclick = function() {
+                        instructionsDiv.innerHTML = "<b>جاري بدء التنزيل...</b><br>بعد الموافقة، سيتم حفظ الفيديو في تطبيق 'الملفات'.<br>لإضافته للألبوم، افتحه واختر 'حفظ الفيديو'.";
+                        // لا حاجة لإخفاء الرسالة، تبقى كمرجع للمستخدم
+                    };
+                    
+                    statusDiv.innerHTML = '';
                 } else {
-                    document.getElementById('status').innerHTML = '❌ فشل التحميل';
+                    statusDiv.innerHTML = `❌ ${data.error || 'فشل التحميل'}`;
+                    backToMain(); // العودة للشاشة الرئيسية عند الفشل
                 }
-            } catch (error) {
-                console.error(error);
-                document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
+            } catch(e) {
+                statusDiv.innerHTML = '❌ خطأ في الاتصال بالخادم';
+                console.error(e);
             } finally {
                 downloading = false;
                 this.disabled = false;
