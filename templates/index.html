@@ -7,104 +7,376 @@
     <title>EasyDown</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        :root { --primary: #00d2ff; --secondary: #3a7bd5; --dark: #1a1a2e; --success: #28a745; }
-        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; min-height: 100vh; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .logo { width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 30px auto; color: white; }
-        h1 { text-align: center; font-size: 2.5rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
-        .input-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .input-wrapper { position: relative; margin-bottom: 20px; }
-        .input-wrapper input { width: 100%; padding: 15px 45px 15px 20px; border-radius: 15px; border: 2px solid transparent; background: rgba(255,255,255,0.1); color: white; font-size: 1rem; direction: ltr; }
-        .input-wrapper input:focus { outline: none; border-color: var(--primary); }
-        .clear-btn { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); color: rgba(255,255,255,0.4); cursor: pointer; display: none; }
-        .input-wrapper.has-text .clear-btn { display: block; }
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; cursor: pointer; }
-        .mode-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
-        .quality-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; display: none; }
-        .quality-selector.show { display: grid; }
-        .quality-btn { padding: 12px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; cursor: pointer; }
-        .quality-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
-        .download-btn { width: 100%; padding: 16px; border-radius: 15px; border: none; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        #status { text-align: center; margin-top: 15px; min-height: 30px; color: #fff; }
-        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .video-screen { display: none; margin-top: 20px; }
-        .video-screen.show { display: block; }
-        .back-btn { display: inline-block; margin: 10px 0; padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; }
-        video { width: 100%; border-radius: 15px; background: black; margin: 10px 0; }
-        .save-btn { display: block; width: 100%; margin: 15px 0; padding: 18px; background: var(--success); color: white; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
-        .main-screen { display: block; }
-        .main-screen.hide { display: none; }
-        .sites-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin: 20px 0; color: rgba(255,255,255,0.5); }
-        .footer { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); }
-        #instructions { text-align: center; color: #ccc; font-size: 0.9rem; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; line-height: 1.5; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --dark: #1a1a2e;
+            --success: #28a745;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 30px auto;
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .input-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 15px 45px 15px 20px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            direction: ltr;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .clear-btn {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            display: none;
+        }
+        .input-wrapper.has-text .clear-btn {
+            display: block;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        .quality-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .quality-selector.show {
+            display: grid;
+        }
+        .quality-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+        }
+        .quality-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        .download-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 15px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            min-height: 30px;
+        }
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* شاشة الفيديو */
+        .video-screen {
+            display: none;
+            margin-top: 20px;
+        }
+        .video-screen.show {
+            display: block;
+        }
+        .back-btn {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        video {
+            width: 100%;
+            border-radius: 15px;
+            background: black;
+            margin: 10px 0;
+        }
+        .save-btn {
+            display: block;
+            width: 100%;
+            margin: 15px 0;
+            padding: 18px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+        .main-screen {
+            display: block;
+        }
+        .main-screen.hide {
+            display: none;
+        }
+        .sites-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            color: rgba(255,255,255,0.5);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.3);
+        }
     </style>
 </head>
 <body>
+    <!-- الشاشة الرئيسية -->
     <div id="mainScreen" class="main-screen">
         <div class="container">
-            <div class="logo"><i class="fas fa-bolt"></i></div>
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+            </div>
             <h1>EasyDown</h1>
+
             <div class="input-card">
                 <div class="input-wrapper" id="inputWrapper">
                     <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
-                    <span class="clear-btn" onclick="clearInput()"><i class="fas fa-times-circle"></i></span>
+                    <span class="clear-btn" onclick="clearInput()">
+                        <i class="fas fa-times-circle"></i>
+                    </span>
                 </div>
+
                 <div class="mode-selector">
                     <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
                     <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
                 </div>
+
                 <div class="quality-selector show" id="qualitySelector">
                     <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
                     <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
                     <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
                     <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
                 </div>
-                <button class="download-btn" id="downloadBtn"><i class="fas fa-download"></i> تحميل</button>
+
+                <button class="download-btn" id="downloadBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+
                 <div id="status"></div>
             </div>
-            <div class="sites-grid"><i class="fab fa-youtube"></i><i class="fab fa-tiktok"></i><i class="fab fa-instagram"></i><i class="fab fa-facebook"></i><i class="fab fa-twitter"></i></div>
+
+            <div class="sites-grid">
+                <i class="fab fa-youtube"></i>
+                <i class="fab fa-tiktok"></i>
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+
             <div class="footer">EasyDown</div>
         </div>
     </div>
+
+    <!-- شاشة عرض الفيديو مع زر حفظ -->
     <div id="videoScreen" class="video-screen">
         <div class="container">
-            <button class="back-btn" onclick="backToMain()"><i class="fas fa-arrow-right"></i> رجوع</button>
-            <video id="videoPlayer" controls playsinline></video>
-            <a id="saveVideoLink" class="save-btn"><i class="fas fa-download"></i> حفظ الفيديو</a>
-            <div id="instructions"></div>
+            <button class="back-btn" onclick="backToMain()">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+            
+            <video id="videoPlayer" controls></video>
+            
+            <!-- زر حفظ الفيديو -->
+            <a id="saveVideoLink" class="save-btn" download>
+                <i class="fas fa-download"></i> حفظ الفيديو
+            </a>
         </div>
     </div>
+
     <script>
-        let currentMode = 'video', currentQuality = 'best', downloading = false, currentVideoUrl = '';
-        const mainScreen = document.getElementById('mainScreen'), videoScreen = document.getElementById('videoScreen'), videoPlayer = document.getElementById('videoPlayer'), saveVideoLink = document.getElementById('saveVideoLink'), videoUrlInput = document.getElementById('videoUrl'), inputWrapper = document.getElementById('inputWrapper'), statusDiv = document.getElementById('status'), instructionsDiv = document.getElementById('instructions');
-        function clearInput() { videoUrlInput.value = ''; inputWrapper.classList.remove('has-text'); videoUrlInput.focus(); }
-        videoUrlInput.addEventListener('input', function() { inputWrapper.classList.toggle('has-text', !!this.value.trim()); });
-        function setMode(mode) { currentMode = mode; document.getElementById('videoMode').classList.toggle('active', mode === 'video'); document.getElementById('audioMode').classList.toggle('active', mode === 'audio'); document.getElementById('qualitySelector').classList.toggle('show', mode === 'video'); }
-        function selectQuality(quality) { currentQuality = quality; document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active')); event.target.classList.add('active'); }
-        function backToMain() { videoScreen.classList.remove('show'); mainScreen.classList.remove('hide'); videoPlayer.pause(); videoPlayer.src = ''; saveVideoLink.href = '#'; instructionsDiv.innerHTML = ''; }
+        let currentMode = 'video';
+        let currentQuality = 'best';
+        let downloading = false;
+        let currentVideoUrl = '';
+
+        const mainScreen = document.getElementById('mainScreen');
+        const videoScreen = document.getElementById('videoScreen');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const saveVideoLink = document.getElementById('saveVideoLink');
+        const videoUrlInput = document.getElementById('videoUrl');
+        const inputWrapper = document.getElementById('inputWrapper');
+
+        function clearInput() {
+            videoUrlInput.value = '';
+            inputWrapper.classList.remove('has-text');
+            videoUrlInput.focus();
+        }
+
+        videoUrlInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                inputWrapper.classList.add('has-text');
+            } else {
+                inputWrapper.classList.remove('has-text');
+            }
+        });
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('videoMode').classList.toggle('active', mode === 'video');
+            document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
+            document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
+        }
+
+        function selectQuality(quality) {
+            currentQuality = quality;
+            document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function backToMain() {
+            videoScreen.classList.remove('show');
+            mainScreen.classList.remove('hide');
+            videoPlayer.pause();
+            videoPlayer.src = '';
+            saveVideoLink.href = '';
+        }
+
         document.getElementById('downloadBtn').addEventListener('click', async function() {
             const url = videoUrlInput.value.trim();
-            if (!url) { statusDiv.innerHTML = '⚠️ الصق الرابط'; return; }
+
+            if (!url) {
+                document.getElementById('status').innerHTML = '⚠️ الصق الرابط';
+                return;
+            }
+
             if (downloading) return;
-            downloading = true; this.disabled = true; statusDiv.innerHTML = '<div class="loader"></div>';
+
+            downloading = true;
+            this.disabled = true;
+            document.getElementById('status').innerHTML = '<div class="loader"></div>';
+
             try {
-                const response = await fetch('/api/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, mode: currentMode, quality: currentMode === 'video' ? currentQuality : 'best' }) });
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        mode: currentMode,
+                        quality: currentMode === 'video' ? currentQuality : 'best'
+                    })
+                });
+
                 const data = await response.json();
+
                 if (data.success) {
                     currentVideoUrl = data.download_url;
-                    mainScreen.classList.add('hide'); videoScreen.classList.add('show');
-                    videoPlayer.src = currentVideoUrl; videoPlayer.play();
-                    const forceDownloadUrl = `/api/force-download?url=<LaTex>${encodeURIComponent(currentVideoUrl)}&filename=$</LaTex>{encodeURIComponent(data.filename || 'video.mp4')}`;
-                    saveVideoLink.href = forceDownloadUrl;
-                    saveVideoLink.setAttribute('download', data.filename || 'video.mp4');
-                    saveVideoLink.onclick = function() { instructionsDiv.innerHTML = "<b>جاري بدء التنزيل...</b><br>بعد الموافقة، سيتم حفظ الفيديو في تطبيق 'الملفات'.<br>لإضافته للألبوم، افتحه واختر 'حفظ الفيديو'."; };
-                    statusDiv.innerHTML = '';
-                } else { statusDiv.innerHTML = `❌ ${data.error || 'فشل التحميل'}`; }
-            } catch(e) { statusDiv.innerHTML = '❌ خطأ في الاتصال بالخادم'; console.error(e); } 
-            finally { downloading = false; this.disabled = false; }
+                    
+                    // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
+                    mainScreen.classList.add('hide');
+                    videoScreen.classList.add('show');
+                    
+                    // تشغيل الفيديو
+                    videoPlayer.src = currentVideoUrl;
+                    videoPlayer.play();
+                    
+                    // تحديث رابط الحفظ
+                    saveVideoLink.href = currentVideoUrl;
+                    saveVideoLink.download = data.filename || 'video.mp4';
+                    
+                    document.getElementById('status').innerHTML = '';
+                } else {
+                    document.getElementById('status').innerHTML = '❌ فشل التحميل';
+                }
+            } catch {
+                document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
+            } finally {
+                downloading = false;
+                this.disabled = false;
+            }
         });
     </script>
 </body>
