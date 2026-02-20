@@ -153,51 +153,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* شاشة الفيديو */
-        .video-screen {
-            display: none;
-            margin-top: 20px;
-        }
-        .video-screen.show {
-            display: block;
-        }
-        .back-btn {
-            display: inline-block;
-            margin: 10px 0;
-            padding: 12px 25px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        video {
-            width: 100%;
-            border-radius: 15px;
-            background: black;
-            margin: 10px 0;
-        }
-        .save-btn {
-            display: block;
-            width: 100%;
-            margin: 15px 0;
-            padding: 18px;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-        }
-        .main-screen {
-            display: block;
-        }
-        .main-screen.hide {
-            display: none;
-        }
         .sites-grid {
             display: flex;
             flex-wrap: wrap;
@@ -214,89 +169,65 @@
     </style>
 </head>
 <body>
-    <!-- الشاشة الرئيسية -->
-    <div id="mainScreen" class="main-screen">
-        <div class="container">
-            <div class="logo">
-                <i class="fas fa-bolt"></i>
-            </div>
-            <h1>EasyDown</h1>
-
-            <div class="input-card">
-                <div class="input-wrapper" id="inputWrapper">
-                    <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
-                    <span class="clear-btn" onclick="clearInput()">
-                        <i class="fas fa-times-circle"></i>
-                    </span>
-                </div>
-
-                <div class="mode-selector">
-                    <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
-                    <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
-                </div>
-
-                <div class="quality-selector show" id="qualitySelector">
-                    <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
-                    <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
-                    <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
-                    <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
-                </div>
-
-                <button class="download-btn" id="downloadBtn">
-                    <i class="fas fa-download"></i> تحميل
-                </button>
-
-                <div id="status"></div>
-            </div>
-
-            <div class="sites-grid">
-                <i class="fab fa-youtube"></i>
-                <i class="fab fa-tiktok"></i>
-                <i class="fab fa-instagram"></i>
-                <i class="fab fa-facebook"></i>
-                <i class="fab fa-twitter"></i>
-            </div>
-
-            <div class="footer">EasyDown</div>
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-bolt"></i>
         </div>
-    </div>
+        <h1>EasyDown</h1>
 
-    <!-- شاشة عرض الفيديو مع زر حفظ -->
-    <div id="videoScreen" class="video-screen">
-        <div class="container">
-            <button class="back-btn" onclick="backToMain()">
-                <i class="fas fa-arrow-right"></i> رجوع
+        <div class="input-card">
+            <div class="input-wrapper" id="inputWrapper">
+                <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
+                <span class="clear-btn" onclick="clearInput()">
+                    <i class="fas fa-times-circle"></i>
+                </span>
+            </div>
+
+            <div class="mode-selector">
+                <button class="mode-btn active" id="videoMode" onclick="setMode('video')">🎬 فيديو</button>
+                <button class="mode-btn" id="audioMode" onclick="setMode('audio')">🎵 صوت</button>
+            </div>
+
+            <div class="quality-selector show" id="qualitySelector">
+                <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
+                <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
+                <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
+                <button class="quality-btn active" onclick="selectQuality('best')">✨ أفضل</button>
+            </div>
+
+            <button class="download-btn" id="downloadBtn">
+                <i class="fas fa-download"></i> تحميل
             </button>
-            
-            <video id="videoPlayer" controls></video>
-            
-            <!-- زر حفظ الفيديو -->
-            <a id="saveVideoLink" class="save-btn" download>
-                <i class="fas fa-download"></i> حفظ الفيديو
-            </a>
+
+            <div id="status"></div>
         </div>
+
+        <div class="sites-grid">
+            <i class="fab fa-youtube"></i>
+            <i class="fab fa-tiktok"></i>
+            <i class="fab fa-instagram"></i>
+            <i class="fab fa-facebook"></i>
+            <i class="fab fa-twitter"></i>
+        </div>
+
+        <div class="footer">EasyDown</div>
     </div>
 
     <script>
         let currentMode = 'video';
         let currentQuality = 'best';
         let downloading = false;
-        let currentVideoUrl = '';
 
-        const mainScreen = document.getElementById('mainScreen');
-        const videoScreen = document.getElementById('videoScreen');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const saveVideoLink = document.getElementById('saveVideoLink');
-        const videoUrlInput = document.getElementById('videoUrl');
+        const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
 
         function clearInput() {
-            videoUrlInput.value = '';
+            videoUrl.value = '';
             inputWrapper.classList.remove('has-text');
-            videoUrlInput.focus();
+            videoUrl.focus();
         }
 
-        videoUrlInput.addEventListener('input', function() {
+        videoUrl.addEventListener('input', function() {
             if (this.value.trim()) {
                 inputWrapper.classList.add('has-text');
             } else {
@@ -317,16 +248,8 @@
             event.target.classList.add('active');
         }
 
-        function backToMain() {
-            videoScreen.classList.remove('show');
-            mainScreen.classList.remove('hide');
-            videoPlayer.pause();
-            videoPlayer.src = '';
-            saveVideoLink.href = '';
-        }
-
         document.getElementById('downloadBtn').addEventListener('click', async function() {
-            const url = videoUrlInput.value.trim();
+            const url = videoUrl.value.trim();
 
             if (!url) {
                 document.getElementById('status').innerHTML = '⚠️ الصق الرابط';
@@ -340,7 +263,7 @@
             document.getElementById('status').innerHTML = '<div class="loader"></div>';
 
             try {
-                const response = await fetch('/api/download', {
+                const response = await fetch('/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -353,27 +276,15 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    currentVideoUrl = data.download_url;
-                    
-                    // إخفاء الشاشة الرئيسية وإظهار شاشة الفيديو
-                    mainScreen.classList.add('hide');
-                    videoScreen.classList.add('show');
-                    
-                    // تشغيل الفيديو
-                    videoPlayer.src = currentVideoUrl;
-                    videoPlayer.play();
-                    
-                    // تحديث رابط الحفظ
-                    saveVideoLink.href = currentVideoUrl;
-                    saveVideoLink.download = data.filename || 'video.mp4';
-                    
-                    document.getElementById('status').innerHTML = '';
+                    // فتح الفيديو مباشرة في نفس الصفحة
+                    window.location.href = data.download_url;
                 } else {
                     document.getElementById('status').innerHTML = '❌ فشل التحميل';
+                    downloading = false;
+                    this.disabled = false;
                 }
             } catch {
                 document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
-            } finally {
                 downloading = false;
                 this.disabled = false;
             }
