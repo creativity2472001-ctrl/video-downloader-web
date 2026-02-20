@@ -6,11 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
-    
-    <title>EasyDown - محمل الفيديوهات الذكي</title>
-    
+    <title>EasyDown</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
         * {
             margin: 0;
@@ -69,11 +66,6 @@
             transform: scale(1.1);
         }
 
-        .menu-button i {
-            font-size: 1.5rem;
-            color: white;
-        }
-
         .menu-sidebar {
             position: fixed;
             top: 0;
@@ -108,87 +100,6 @@
             transform: rotate(90deg);
         }
 
-        .menu-section {
-            margin-bottom: 30px;
-        }
-
-        .menu-section-title {
-            color: var(--primary);
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .language-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .lang-btn {
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.95rem;
-        }
-
-        .lang-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .lang-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-color: transparent;
-        }
-
-        .help-text-menu {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .help-text-menu p {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .help-text-menu i {
-            color: var(--primary);
-            width: 20px;
-        }
-
-        .install-app {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(40, 167, 69, 0.2);
-            border-radius: 12px;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .install-app p {
-            color: var(--success);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.95rem;
-        }
-
         .logo-container {
             display: flex;
             justify-content: center;
@@ -219,12 +130,7 @@
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1rem;
+            margin-bottom: 5px;
         }
 
         .input-card {
@@ -236,13 +142,14 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .input-group {
+        .input-wrapper {
+            position: relative;
             margin-bottom: 20px;
         }
 
-        .input-group input {
+        .input-wrapper input {
             width: 100%;
-            padding: 15px 20px;
+            padding: 15px 45px 15px 20px;
             border-radius: 15px;
             border: 2px solid transparent;
             background: rgba(255, 255, 255, 0.1);
@@ -253,14 +160,35 @@
             text-align: left;
         }
 
-        .input-group input:focus {
+        .input-wrapper input:focus {
             outline: none;
             border-color: var(--primary);
             background: rgba(255, 255, 255, 0.15);
         }
 
-        .input-group input::placeholder {
+        .input-wrapper input::placeholder {
             color: rgba(255, 255, 255, 0.4);
+        }
+
+        .clear-input-btn {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: none;
+            z-index: 10;
+        }
+        
+        .clear-input-btn:hover {
+            color: white;
+        }
+
+        .input-wrapper.has-text .clear-input-btn {
+            display: block;
         }
 
         .mode-selector {
@@ -346,7 +274,7 @@
             box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
         }
 
-        .download-btn:hover {
+        .download-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 210, 255, 0.4);
         }
@@ -354,17 +282,12 @@
         .download-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .status-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
+        #status {
             margin-top: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: none;
+            text-align: center;
+            min-height: 50px;
         }
 
         .loader {
@@ -382,45 +305,13 @@
             100% { transform: rotate(360deg); }
         }
 
-        .video-info {
-            text-align: center;
-        }
-
-        .video-info h3 {
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .video-info p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-        }
-
-        .final-download-link {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #28a745, #34ce57);
-            color: white;
-            text-decoration: none;
-            text-align: center;
+        .success-message {
+            color: var(--success);
             font-weight: bold;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .final-download-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
         }
 
         .error-message {
             color: var(--error);
-            text-align: center;
             font-weight: bold;
         }
 
@@ -471,20 +362,6 @@
             font-size: 0.8rem;
             margin-top: 30px;
         }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .quality-selector {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
@@ -496,36 +373,6 @@
         <div class="close-menu" onclick="toggleMenu()">
             <i class="fas fa-times"></i>
         </div>
-
-        <div class="menu-section">
-            <div class="menu-section-title" data-i18n="language">🌐 اللغة</div>
-            <div class="language-grid">
-                <button class="lang-btn" onclick="changeLanguage('ar')">🇸🇦 العربية</button>
-                <button class="lang-btn" onclick="changeLanguage('en')">🇺🇸 English</button>
-                <button class="lang-btn" onclick="changeLanguage('tr')">🇹🇷 Türkçe</button>
-                <button class="lang-btn" onclick="changeLanguage('ru')">🇷🇺 Русский</button>
-                <button class="lang-btn" onclick="changeLanguage('fr')">🇫🇷 Français</button>
-                <button class="lang-btn" onclick="changeLanguage('de')">🇩🇪 Deutsch</button>
-            </div>
-        </div>
-
-        <div class="menu-section">
-            <div class="menu-section-title" data-i18n="how_to_use">📖 طريقة الاستخدام</div>
-            <div class="help-text-menu">
-                <p><i class="fas fa-link"></i> <span data-i18n="help_1">الصق رابط الفيديو في الحقل أعلاه</span></p>
-                <p><i class="fas fa-video"></i> <span data-i18n="help_2">اختر صيغة التحميل (فيديو أو صوت)</span></p>
-                <p><i class="fas fa-sliders-h"></i> <span data-i18n="help_3">اختر الجودة المناسبة</span></p>
-                <p><i class="fas fa-download"></i> <span data-i18n="help_4">اضغط على زر "تحميل"</span></p>
-                <p><i class="fas fa-clock"></i> <span data-i18n="help_5">انتظر حتى تجهيز الملف</span></p>
-                <p><i class="fas fa-save"></i> <span data-i18n="help_6">اضغط على رابط التحميل</span></p>
-            </div>
-        </div>
-
-        <div class="menu-section">
-            <div class="install-app">
-                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="add_to_home">لإضافة التطبيق للشاشة الرئيسية: اضغط على زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية"</span></p>
-            </div>
-        </div>
     </div>
 
     <div class="container">
@@ -536,50 +383,42 @@
         </div>
 
         <div class="header">
-            <h1><i class="fas fa-bolt"></i> EasyDown</h1>
-            <p data-i18n="tagline">أسرع وأسهل طريقة لتحميل الفيديوهات</p>
+            <h1>EasyDown</h1>
         </div>
 
         <div class="input-card">
-            <div class="input-group">
-                <input type="url" id="videoUrl" data-i18n-placeholder="paste_link" placeholder="الصق الرابط هنا" dir="ltr">
+            <div class="input-wrapper" id="inputWrapper">
+                <input type="url" id="videoUrl" placeholder="الصق الرابط هنا" dir="ltr">
+                <span class="clear-input-btn" id="clearInputBtn" onclick="clearInput()">
+                    <i class="fas fa-times-circle"></i>
+                </span>
             </div>
 
             <div class="mode-selector">
                 <button class="mode-btn active" id="videoMode" onclick="setMode('video')">
-                    <i class="fas fa-video"></i> <span data-i18n="video">فيديو</span>
+                    <i class="fas fa-video"></i> فيديو
                 </button>
                 <button class="mode-btn" id="audioMode" onclick="setMode('audio')">
-                    <i class="fas fa-music"></i> <span data-i18n="audio">صوت</span>
+                    <i class="fas fa-music"></i> صوت
                 </button>
             </div>
 
             <div class="quality-selector show" id="qualitySelector">
-                <button class="quality-btn" onclick="selectQuality('480p')">
-                    <span data-i18n="quality_480p">480p</span>
-                </button>
-                <button class="quality-btn" onclick="selectQuality('720p')">
-                    <span data-i18n="quality_720p">720p</span>
-                </button>
-                <button class="quality-btn" onclick="selectQuality('1080p')">
-                    <span data-i18n="quality_1080p">1080p</span>
-                </button>
-                <button class="quality-btn active" onclick="selectQuality('best')">
-                    <span data-i18n="quality_best">أفضل جودة</span>
-                </button>
+                <button class="quality-btn" onclick="selectQuality('480p')">480p</button>
+                <button class="quality-btn" onclick="selectQuality('720p')">720p</button>
+                <button class="quality-btn" onclick="selectQuality('1080p')">1080p</button>
+                <button class="quality-btn active" onclick="selectQuality('best')">أفضل جودة</button>
             </div>
 
-            <button class="download-btn" id="startBtn" onclick="startDownload()">
-                <i class="fas fa-download"></i> <span data-i18n="download">تحميل</span>
+            <button class="download-btn" id="downloadBtn">
+                <i class="fas fa-download"></i> تحميل
             </button>
-        </div>
 
-        <div id="statusCard" class="status-card">
-            <div id="statusContent"></div>
+            <div id="status"></div>
         </div>
 
         <div class="sites-section">
-            <h3 data-i18n="supported_sites">المواقع المدعومة</h3>
+            <h3>المواقع المدعومة</h3>
             <div class="sites-grid">
                 <div class="site-item" title="YouTube"><i class="fab fa-youtube"></i><span>YouTube</span></div>
                 <div class="site-item" title="TikTok"><i class="fab fa-tiktok"></i><span>TikTok</span></div>
@@ -591,259 +430,88 @@
         </div>
 
         <div class="footer">
-            ©️ 2026 EasyDown - <span data-i18n="footer">جميع الحقوق محفوظة</span>
+            ©️ 2026 EasyDown
         </div>
     </div>
 
     <script>
         let currentMode = 'video';
         let currentQuality = 'best';
-        let currentLang = 'ar';
+        let downloadInProgress = false;
 
-        const translations = {
-            ar: {
-                paste_link: 'الصق الرابط هنا',
-                video: 'فيديو',
-                audio: 'صوت',
-                download: 'تحميل',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'أفضل جودة',
-                downloading: '⏳ جاري التحميل...',
-                ready: 'جاهز!',
-                save: 'اضغط هنا للحفظ',
-                error: '❌ حدث خطأ',
-                connection_error: '❌ خطأ في الاتصال',
-                enter_link: '⚠️ الصق الرابط',
-                help_1: 'الصق رابط الفيديو في الحقل أعلاه',
-                help_2: 'اختر صيغة التحميل (فيديو أو صوت)',
-                help_3: 'اختر الجودة المناسبة',
-                help_4: 'اضغط على زر "تحميل"',
-                help_5: 'انتظر حتى تجهيز الملف',
-                help_6: 'اضغط على رابط التحميل',
-                add_to_home: 'لإضافة التطبيق للشاشة الرئيسية: اضغط على زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية"',
-                supported_sites: 'المواقع المدعومة',
-                footer: 'جميع الحقوق محفوظة',
-                tagline: 'أسرع وأسهل طريقة لتحميل الفيديوهات',
-                how_to_use: '📖 طريقة الاستخدام'
-            },
-            en: {
-                paste_link: 'Paste link here',
-                video: 'Video',
-                audio: 'Audio',
-                download: 'Download',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'Best Quality',
-                downloading: '⏳ Downloading...',
-                ready: 'Ready!',
-                save: 'Click here to save',
-                error: '❌ Error',
-                connection_error: '❌ Connection error',
-                enter_link: '⚠️ Paste link',
-                help_1: 'Paste video link above',
-                help_2: 'Choose format (Video/Audio)',
-                help_3: 'Select quality',
-                help_4: 'Click "Download" button',
-                help_5: 'Wait for processing',
-                help_6: 'Click download link',
-                add_to_home: 'Add to home screen: Share → Add to Home Screen',
-                supported_sites: 'Supported sites',
-                footer: 'All rights reserved',
-                tagline: 'Fastest way to download videos',
-                how_to_use: '📖 How to use'
-            },
-            tr: {
-                paste_link: 'Linki yapıştır',
-                video: 'Video',
-                audio: 'Ses',
-                download: 'İndir',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'En iyi kalite',
-                downloading: '⏳ İndiriliyor...',
-                ready: 'Hazır!',
-                save: 'İndir',
-                error: '❌ Hata',
-                connection_error: '❌ Bağlantı hatası',
-                enter_link: '⚠️ Link yapıştır',
-                help_1: 'Linki yapıştır',
-                help_2: 'Format seç (Video/Ses)',
-                help_3: 'Kalite seç',
-                help_4: '"İndir" butonuna bas',
-                help_5: 'Bekle',
-                help_6: 'Linke tıkla',
-                add_to_home: 'Ana ekrana ekle: Paylaş → Ana Ekrana Ekle',
-                supported_sites: 'Desteklenen siteler',
-                footer: 'Tüm hakları saklıdır',
-                tagline: 'Video indirmenin en hızlı yolu',
-                how_to_use: '📖 Nasıl kullanılır'
-            },
-            ru: {
-                paste_link: 'Вставьте ссылку',
-                video: 'Видео',
-                audio: 'Аудио',
-                download: 'Скачать',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'Лучшее качество',
-                downloading: '⏳ Загрузка...',
-                ready: 'Готово!',
-                save: 'Сохранить',
-                error: '❌ Ошибка',
-                connection_error: '❌ Ошибка соединения',
-                enter_link: '⚠️ Вставьте ссылку',
-                help_1: 'Вставьте ссылку',
-                help_2: 'Выберите формат',
-                help_3: 'Выберите качество',
-                help_4: 'Нажмите "Скачать"',
-                help_5: 'Подождите',
-                help_6: 'Нажмите ссылку',
-                add_to_home: 'На главный экран: Поделиться → На экран «Домой»',
-                supported_sites: 'Поддерживаемые сайты',
-                footer: 'Все права защищены',
-                tagline: 'Быстрая загрузка видео',
-                how_to_use: '📖 Инструкция'
-            },
-            fr: {
-                paste_link: 'Collez le lien',
-                video: 'Vidéo',
-                audio: 'Audio',
-                download: 'Télécharger',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'Meilleure qualité',
-                downloading: '⏳ Téléchargement...',
-                ready: 'Prêt!',
-                save: 'Sauvegarder',
-                error: '❌ Erreur',
-                connection_error: '❌ Erreur connexion',
-                enter_link: '⚠️ Collez le lien',
-                help_1: 'Collez le lien',
-                help_2: 'Choisissez le format',
-                help_3: 'Choisissez la qualité',
-                help_4: 'Cliquez "Télécharger"',
-                help_5: 'Attendez',
-                help_6: 'Cliquez sur le lien',
-                add_to_home: 'Ajouter à l\'écran d\'accueil',
-                supported_sites: 'Sites supportés',
-                footer: 'Tous droits réservés',
-                tagline: 'Téléchargement rapide',
-                how_to_use: '📖 Comment utiliser'
-            },
-            de: {
-                paste_link: 'Link einfügen',
-                video: 'Video',
-                audio: 'Audio',
-                download: 'Herunterladen',
-                quality_480p: '480p',
-                quality_720p: '720p',
-                quality_1080p: '1080p',
-                quality_best: 'Beste Qualität',
-                downloading: '⏳ Lade...',
-                ready: 'Fertig!',
-                save: 'Speichern',
-                error: '❌ Fehler',
-                connection_error: '❌ Verbindungsfehler',
-                enter_link: '⚠️ Link einfügen',
-                help_1: 'Link einfügen',
-                help_2: 'Format wählen',
-                help_3: 'Qualität wählen',
-                help_4: '"Download" klicken',
-                help_5: 'Warten',
-                help_6: 'Link klicken',
-                add_to_home: 'Zum Home-Bildschirm',
-                supported_sites: 'Unterstützte Seiten',
-                footer: 'Alle Rechte vorbehalten',
-                tagline: 'Schneller Video-Download',
-                how_to_use: '📖 Anleitung'
-            }
-        };
-
-        function updateLanguage(lang) {
-            currentLang = lang;
-            document.documentElement.lang = lang;
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
-                    el.textContent = translations[lang][key];
-                }
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (translations[lang] && translations[lang][key]) {
-                    el.placeholder = translations[lang][key];
-                }
-            });
-
-            document.title = `EasyDown - ${translations[lang].tagline}`;
-        }
-
-        function changeLanguage(lang) {
-            updateLanguage(lang);
-            toggleMenu();
-        }
+        const videoUrlInput = document.getElementById('videoUrl');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const clearBtn = document.getElementById('clearInputBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusDiv = document.getElementById('status');
+        const menuSidebar = document.getElementById('menuSidebar');
 
         function toggleMenu() {
-            document.getElementById('menuSidebar').classList.toggle('open');
+            menuSidebar.classList.toggle('open');
         }
 
         document.addEventListener('click', function(event) {
-            const menu = document.getElementById('menuSidebar');
             const menuBtn = document.querySelector('.menu-button');
-            if (!menu.contains(event.target) && !menuBtn.contains(event.target) && menu.classList.contains('open')) {
-                menu.classList.remove('open');
+            if (!menuSidebar.contains(event.target) && !menuBtn.contains(event.target) && menuSidebar.classList.contains('open')) {
+                menuSidebar.classList.remove('open');
             }
         });
 
-        function setMode(mode) {
+        videoUrlInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                inputWrapper.classList.add('has-text');
+            } else {
+                inputWrapper.classList.remove('has-text');
+            }
+        });
+
+        window.clearInput = function() {
+            videoUrlInput.value = '';
+            inputWrapper.classList.remove('has-text');
+            videoUrlInput.focus();
+        };
+
+        window.setMode = function(mode) {
             currentMode = mode;
             document.getElementById('videoMode').classList.toggle('active', mode === 'video');
             document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
             document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
-        }
+        };
 
-        function selectQuality(quality) {
+        window.selectQuality = function(quality) {
             currentQuality = quality;
             document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
+        };
+
+        function showStatus(message, type) {
+            statusDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
         }
 
-        async function startDownload() {
-            const url = document.getElementById('videoUrl').value.trim();
-            const statusCard = document.getElementById('statusCard');
-            const statusContent = document.getElementById('statusContent');
-            const startBtn = document.getElementById('startBtn');
+        function showLoader() {
+            statusDiv.innerHTML = '<div class="loader"></div><div>جاري التحميل...</div>';
+        }
+
+        downloadBtn.addEventListener('click', async function() {
+            const url = videoUrlInput.value.trim();
 
             if (!url) {
-                alert(translations[currentLang].enter_link);
+                showStatus('⚠️ الصق الرابط أولاً', 'error');
                 return;
             }
 
-            statusCard.style.display = 'block';
-            statusContent.innerHTML = `
-                <div class="loader"></div>
-                <div class="video-info">
-                    <p>${translations[currentLang].downloading}</p>
-                </div>
-            `;
-            
-            startBtn.disabled = true;
+            if (downloadInProgress) return;
+
+            downloadInProgress = true;
+            downloadBtn.disabled = true;
+            showLoader();
 
             try {
                 const response = await fetch('/api/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url: url, 
+                    body: JSON.stringify({
+                        url: url,
                         mode: currentMode,
                         quality: currentMode === 'video' ? currentQuality : 'best'
                     })
@@ -852,73 +520,36 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    statusContent.innerHTML = `
-                        <div class="video-info">
-                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 2.5rem; margin-bottom: 15px;"></i>
-                            <h3>${translations[currentLang].ready}</h3>
-                            <p style="margin-bottom: 10px;">${data.title}</p>
-                            <a href="${data.download_url}" class="final-download-link" download>
-                                <i class="fas fa-download"></i> ${translations[currentLang].save}
-                            </a>
-                        </div>
-                    `;
+                    // ✅ تحميل مباشر بدون "اضغط هنا للحفظ"
+                    const link = document.createElement('a');
+                    link.href = data.download_url;
+                    link.download = data.filename || 'video.mp4';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // ✅ رسالة نجاح بسيطة
+                    showStatus('✅ تم بدء التحميل!', 'success');
+                    
+                    // ✅ مسح الرابط تلقائياً بعد التحميل
+                    setTimeout(clearInput, 2000);
                 } else {
-                    statusContent.innerHTML = `
-                        <div class="video-info">
-                            <p class="error-message">${translations[currentLang].error}</p>
-                        </div>
-                    `;
+                    showStatus('❌ ' + (data.error || 'فشل التحميل'), 'error');
                 }
             } catch (error) {
-                statusContent.innerHTML = `
-                    <div class="video-info">
-                        <p class="error-message">${translations[currentLang].connection_error}</p>
-                    </div>
-                `;
+                showStatus('❌ خطأ في الاتصال', 'error');
             } finally {
-                startBtn.disabled = false;
-            }
-        }
-
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                startDownload();
+                downloadInProgress = false;
+                downloadBtn.disabled = false;
             }
         });
 
-        // 🚀 تحميل فوري - خطوتين فقط (الإضافة الجديدة)
-        (function() {
-            let downloadUrl = null;
-            
-            const observer = new MutationObserver(() => {
-                const link = document.querySelector('.final-download-link');
-                if (link && link.href && link.href !== downloadUrl) {
-                    downloadUrl = link.href;
-                    
-                    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                        setTimeout(() => {
-                            alert('📱 اضغط مطولاً على الفيديو ثم اختر Save Video');
-                        }, 1000);
-                    }
-                    
-                    window.open(link.href, '_blank');
-                    
-                    setTimeout(() => {
-                        document.getElementById('statusCard').style.display = 'none';
-                    }, 2000);
-                }
-            });
-            
-            observer.observe(document.body, { childList: true, subtree: true });
-            
-            const originalStart = startDownload;
-            window.startDownload = async function() {
-                await originalStart();
-                document.getElementById('startBtn').innerHTML = '<i class="fas fa-redo"></i> تحميل آخر';
-            };
-        })();
-
-        updateLanguage('ar');
+        videoUrlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                downloadBtn.click();
+            }
+        });
     </script>
 </body>
 </html>
