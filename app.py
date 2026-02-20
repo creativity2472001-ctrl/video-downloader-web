@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'easydown_secret_key_2026')
 
-# تحديد مجلد التحميل
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
@@ -27,7 +26,6 @@ ALLOWED_DOMAINS = [
     "snapchat.com", "www.snapchat.com"
 ]
 
-# قائمة اللغات المدعومة
 LANGUAGES = {
     'ar': {
         'name': 'العربية',
@@ -100,7 +98,6 @@ LANGUAGES = {
 def get_text(key, lang='ar'):
     return LANGUAGES.get(lang, LANGUAGES['ar']).get(key, key)
 
-# تنظيف الملفات القديمة (كل ساعة)
 def cleanup():
     while True:
         try:
@@ -109,7 +106,7 @@ def cleanup():
                 path = os.path.join(DOWNLOAD_DIR, f)
                 if os.path.isfile(path):
                     file_age = now - os.stat(path).st_mtime
-                    if file_age > 3600:  # ساعة واحدة
+                    if file_age > 3600:
                         try:
                             os.remove(path)
                             logger.info(f"تم حذف الملف القديم: {f}")
@@ -117,12 +114,9 @@ def cleanup():
                             logger.error(f"خطأ في حذف الملف {f}: {e}")
         except Exception as e:
             logger.error(f"خطأ في عملية التنظيف: {e}")
-        
-        time.sleep(1800)  # كل 30 دقيقة
+        time.sleep(1800)
 
-# بدء خيط التنظيف
-cleanup_thread = threading.Thread(target=cleanup, daemon=True)
-cleanup_thread.start()
+threading.Thread(target=cleanup, daemon=True).start()
 
 @app.route('/')
 def index():
@@ -142,14 +136,11 @@ def video_info():
     try:
         data = request.get_json()
         url = data.get('url', '').strip()
-        
         if not url:
             return jsonify({'error': '⚠️ الرابط مطلوب'}), 400
-        
         ydl_opts = {'quiet': True, 'no_warnings': True}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-        
         return jsonify({
             'success': True,
             'title': info.get('title', 'Video'),
@@ -173,7 +164,6 @@ def download():
         file_id = uuid.uuid4().hex[:8]
         base = os.path.join(DOWNLOAD_DIR, file_id)
 
-        # إعدادات yt-dlp مع ملف الكوكيز
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
@@ -205,7 +195,6 @@ def download():
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
 
-        # البحث عن الملف المحمل
         filename = None
         for f in os.listdir(DOWNLOAD_DIR):
             if f.startswith(file_id):
@@ -215,8 +204,8 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # رابط التحميل المباشر
-        download_url = f"/get/{filename}"
+        download_url = f"/video/{filename}"
+        page_url = f"/watch/{filename}"
 
         logger.info(f"تم التحميل بنجاح: {filename}")
         
@@ -224,6 +213,7 @@ def download():
             'success': True,
             'direct_download': True,
             'download_url': download_url,
+            'page_url': page_url,
             'title': title,
             'filename': filename
         })
@@ -232,26 +222,20 @@ def download():
         logger.error(f"Error in download: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/get/<filename>')
-def get_file(filename):
+@app.route('/watch/<filename>')
+def watch_video(filename):
     try:
         path = os.path.join(DOWNLOAD_DIR, filename)
-        
-        # التحقق من أمان اسم الملف
-        if '..' in filename or '/' in filename or '\\' in filename:
-            return 'اسم ملف غير صالح', 403
-        
         if not os.path.exists(path):
             return 'الملف غير موجود', 404
 
-        # ✅ صفحة HTML بسيطة تحتوي على الفيديو + زر رجوع + زر حفظ
         return f'''
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>EasyDown - الفيديو</title>
+            <title>EasyDown - فيديو</title>
             <style>
                 body {{
                     background: #1a1a2e;
@@ -293,6 +277,7 @@ def get_file(filename):
                     font-size: 1.3rem;
                     width: 80%;
                     max-width: 300px;
+                    border: none;
                 }}
                 .container {{
                     max-width: 600px;
@@ -305,22 +290,21 @@ def get_file(filename):
                 <button onclick="history.back()" class="back-btn">🔙 رجوع للتطبيق</button>
                 
                 <video controls autoplay playsinline>
-                    <source src="/get-video/{filename}" type="video/mp4">
+                    <source src="/video/{filename}" type="video/mp4">
                 </video>
                 
-                <a href="/get-video/{filename}" download class="save-btn">💾 حفظ الفيديو</a>
+                <a href="/video/{filename}" download class="save-btn">💾 حفظ الفيديو</a>
             </div>
         </body>
         </html>
         '''
-
     except Exception as e:
-        logger.error(f"Error in get_file: {e}")
+        logger.error(f"Error in watch_video: {e}")
         return str(e), 500
 
-@app.route('/get-video/<filename>')
-def get_video_file(filename):
-    """مسار منفصل لتشغيل الفيديو"""
+@app.route('/video/<filename>')
+def video_file(filename):
+    """مسار مباشر للفيديو (ما يفتح صفحة جديدة)"""
     path = os.path.join(DOWNLOAD_DIR, filename)
     return send_file(path, mimetype='video/mp4')
 
