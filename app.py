@@ -48,10 +48,14 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
+        # إعدادات yt-dlp المتقدمة لجميع المواقع
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'cookiefile': 'cookies.txt',  # ملف الكوكيز
+            'extractor_args': {'youtube': ['bgutil']},  # لليوتيوب
+            'impersonate': 'chrome',  # انتحال متصفح لفيسبوك
         }
 
         if mode == 'audio':
@@ -63,7 +67,15 @@ def download():
                 }],
             })
         else:
-            ydl_opts['format'] = 'best[ext=mp4]/best'
+            # تحسين اختيار الجودة
+            if quality == '480p':
+                ydl_opts['format'] = 'best[height<=480]'
+            elif quality == '720p':
+                ydl_opts['format'] = 'best[height<=720]'
+            elif quality == '1080p':
+                ydl_opts['format'] = 'best[height<=1080]'
+            else:
+                ydl_opts['format'] = 'best[ext=mp4]/best'
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -78,22 +90,29 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # رابط مباشر للفيديو بدون HTML
+        # رابط مباشر للفيديو
         download_url = f"/v/{filename}"
 
         return jsonify({
             'success': True,
             'download_url': download_url,
-            'title': title
+            'title': title,
+            'filename': filename
         })
 
     except Exception as e:
+        # تسجيل الخطأ للمساعدة في التصحيح
+        print(f"Download error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
 def get_video(filename):
-    """مسار مباشر للفيديو - لا يوجد HTML"""
+    """مسار مباشر للفيديو"""
     path = os.path.join(DOWNLOAD_DIR, filename)
+    
+    if not os.path.exists(path):
+        return 'الملف غير موجود', 404
+    
     return send_file(
         path,
         mimetype='video/mp4',
