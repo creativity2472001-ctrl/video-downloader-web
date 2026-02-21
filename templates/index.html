@@ -285,6 +285,18 @@
             color: #ccc;
             text-align: center;
         }
+        .fallback-link {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--success);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -319,7 +331,7 @@
                 <p><i class="fas fa-sliders-h"></i> <span data-i18n="help2">اختر فيديو أو صوت</span></p>
                 <p><i class="fas fa-video"></i> <span data-i18n="help3">اختر الجودة المناسبة</span></p>
                 <p><i class="fas fa-download"></i> <span data-i18n="help4">اضغط تحميل</span></p>
-                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط "Save Video"</span></p>
+                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط "Save Video" أو استخدم الرابط المباشر</span></p>
                 <p><i class="fas fa-folder"></i> <span data-i18n="help6">الفيديو يحفظ في الصور</span></p>
             </div>
         </div>
@@ -399,7 +411,7 @@
                 help2: 'اختر فيديو أو صوت',
                 help3: 'اختر الجودة المناسبة',
                 help4: 'اضغط تحميل',
-                help5: 'لآيفون: اضغط "Save Video"',
+                help5: 'لآيفون: اضغط "Save Video" أو استخدم الرابط المباشر',
                 help6: 'الفيديو يحفظ في الصور',
                 install: '📱 تثبيت التطبيق',
                 install1: 'اضغط زر المشاركة (مربع)',
@@ -421,7 +433,7 @@
                 help2: 'Choose video/audio',
                 help3: 'Select quality',
                 help4: 'Press download',
-                help5: 'iPhone: Tap "Save Video"',
+                help5: 'iPhone: Tap "Save Video" or use direct link',
                 help6: 'Video saves to Photos',
                 install: '📱 Install App',
                 install1: 'Tap share button',
@@ -443,7 +455,7 @@
                 help2: 'Video/ses seç',
                 help3: 'Kalite seç',
                 help4: 'İndir e bas',
-                help5: 'iPhone: "Save Video" seç',
+                help5: 'iPhone: "Save Video" seç veya direkt linki kullan',
                 help6: 'Video Fotoğraflara kaydedilir',
                 install: '📱 Uygulamayı Kur',
                 install1: 'Paylaş butonuna bas',
@@ -465,7 +477,7 @@
                 help2: 'Выберите видео/аудио',
                 help3: 'Выберите качество',
                 help4: 'Нажмите скачать',
-                help5: 'iPhone: Нажмите "Save Video"',
+                help5: 'iPhone: Нажмите "Save Video" или используйте прямую ссылку',
                 help6: 'Видео сохраняется в Фото',
                 install: '📱 Установить приложение',
                 install1: 'Нажмите кнопку поделиться',
@@ -487,7 +499,7 @@
                 help2: 'Choisissez vidéo/audio',
                 help3: 'Choisissez qualité',
                 help4: 'Appuyez télécharger',
-                help5: 'iPhone: Appuyez "Save Video"',
+                help5: 'iPhone: Appuyez "Save Video" ou utilisez le lien direct',
                 help6: 'La vidéo est enregistrée dans Photos',
                 install: '📱 Installer',
                 install1: 'Appuyez partager',
@@ -509,7 +521,7 @@
                 help2: 'Video/Audio wählen',
                 help3: 'Qualität wählen',
                 help4: 'Herunterladen drücken',
-                help5: 'iPhone: "Save Video" drücken',
+                help5: 'iPhone: "Save Video" drücken oder direkten Link verwenden',
                 help6: 'Video wird in Fotos gespeichert',
                 install: '📱 App installieren',
                 install1: 'Teilen-Button drücken',
@@ -601,7 +613,23 @@
             event.target.classList.add('active');
         }
 
-        // دالة التحميل الذكية
+        // دالة عرض رابط التحميل المباشر (Fallback)
+        function showDirectDownloadLink(url, filename) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div style="background: rgba(40,167,69,0.2); border-radius: 15px; padding: 20px; margin-top: 20px;">
+                    <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✅ الفيديو جاهز!</p>
+                    <a href="${url}" download="${filename}" style="display: block; background: #28a745; color: white; text-decoration: none; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;">
+                        <i class="fas fa-download"></i> اضغط هنا لتحميل الفيديو
+                    </a>
+                    <p style="color: #ccc; font-size: 0.8rem; margin-top: 15px;">
+                        <i class="fas fa-mobile-alt"></i> للآيفون: بعد التحميل، اذهب لتطبيق "الملفات" ← مجلد "تنزيلات" ← اضغط مطولاً على الفيديو ← "حفظ الفيديو"
+                    </p>
+                </div>
+            `;
+        }
+
+        // دالة التحميل الذكية (محدثة)
         async function handleDownload() {
             const url = videoUrl.value.trim();
 
@@ -633,28 +661,32 @@
                     currentVideoUrl = data.download_url;
                     currentFilename = data.filename || 'video.mp4';
 
-                    // ✅ زر ذكي: آيفون + فيديو = Web Share
-                    if (isIOS && currentMode === 'video' && navigator.share && navigator.canShare) {
+                    // ✅ لآيفون + فيديو: نحاول المشاركة أولاً
+                    if (isIOS && currentMode === 'video') {
                         try {
-                            document.getElementById('status').innerHTML = '📱 جاري التجهيز...';
+                            document.getElementById('status').innerHTML = '📱 تجهيز للمشاركة...';
                             
-                            const videoResponse = await fetch(currentVideoUrl);
-                            const blob = await videoResponse.blob();
-                            const file = new File([blob], currentFilename, { type: 'video/mp4' });
-                            
-                            if (navigator.canShare({ files: [file] })) {
+                            // محاولة المشاركة المباشرة (بدون تحميل كامل)
+                            if (navigator.share) {
                                 await navigator.share({
-                                    files: [file],
+                                    url: currentVideoUrl,
                                     title: 'EasyDown Video'
                                 });
                                 document.getElementById('status').innerHTML = '✅ تمت المشاركة!';
+                                setTimeout(() => {
+                                    document.getElementById('status').innerHTML = '';
+                                }, 3000);
+                            } else {
+                                // إذا لم تدعم المشاركة، استخدم الرابط المباشر
+                                showDirectDownloadLink(currentVideoUrl, currentFilename);
                             }
-                        } catch (error) {
-                            console.log('Share cancelled');
-                            document.getElementById('status').innerHTML = '';
+                        } catch (shareError) {
+                            console.log('Share failed, using fallback');
+                            // إذا فشلت المشاركة، استخدم الرابط المباشر
+                            showDirectDownloadLink(currentVideoUrl, currentFilename);
                         }
                     } 
-                    // ✅ باقي الحالات: تحميل مباشر
+                    // ✅ للأندرويد والكمبيوتر والصوت: تحميل مباشر
                     else {
                         const link = document.createElement('a');
                         link.href = currentVideoUrl;
@@ -663,11 +695,10 @@
                         link.click();
                         document.body.removeChild(link);
                         document.getElementById('status').innerHTML = '✅ بدأ التحميل!';
+                        setTimeout(() => {
+                            document.getElementById('status').innerHTML = '';
+                        }, 3000);
                     }
-                    
-                    setTimeout(() => {
-                        document.getElementById('status').innerHTML = '';
-                    }, 3000);
                     
                 } else {
                     document.getElementById('status').innerHTML = '❌ ' + (data.error || 'فشل التحميل');
