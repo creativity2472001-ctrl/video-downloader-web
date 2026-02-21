@@ -54,7 +54,7 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
-        # إعدادات yt-dlp المحسنة لجميع المواقع
+        # إعدادات yt-dlp المحسنة
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
@@ -66,15 +66,17 @@ def download():
             'extractor_retries': 5,
         }
 
-        # إضافة ملف الكوكيز إذا كان موجوداً
+        # ✅ التأكد من وجود ملف الكوكيز
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
             logger.info("✅ تم العثور على ملف الكوكيز")
+        else:
+            logger.warning("⚠️ ملف الكوكيز غير موجود!")
 
-        # إعدادات impersonate لجميع المواقع
+        # ✅ إعدادات impersonate لجميع المواقع
         ydl_opts['impersonate'] = 'chrome'
         
-        # إعدادات خاصة لكل موقع
+        # ✅ إعدادات خاصة لكل موقع
         if 'youtube.com' in url or 'youtu.be' in url:
             logger.info("🎬 إعدادات يوتيوب")
             ydl_opts['extractor_args'] = {'youtube': ['player-client=web', 'skip=webpage']}
