@@ -69,7 +69,7 @@ def download():
         # إعدادات خاصة لفيسبوك وانستغرام
         if 'facebook.com' in url or 'fb.watch' in url or 'instagram.com' in url:
             logger.info("📱 استخدام إعدادات خاصة لفيسبوك/انستغرام")
-            ydl_opts['impersonate'] = 'chrome'  # محاكاة متصفح حقيقي
+            ydl_opts['impersonate'] = 'chrome'
             ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
             ydl_opts['http_headers'] = {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
@@ -88,7 +88,8 @@ def download():
         # إعدادات خاصة بيوتيوب
         elif 'youtube.com' in url or 'youtu.be' in url:
             logger.info("🎬 استخدام إعدادات خاصة بيوتيوب")
-            ydl_opts['extractor_args'] = {'youtube': ['bgutil']}
+            # ✅ استخدام ytse بدلاً من bgutil (يدعم JavaScript)
+            ydl_opts['extractor_args'] = {'youtube': ['ytse']}
             ydl_opts['impersonate'] = 'chrome'
 
         if mode == 'audio':
