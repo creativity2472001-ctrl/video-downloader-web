@@ -31,7 +31,6 @@
             position: relative;
         }
         
-        /* القائمة الجانبية - الثلاث شرطات */
         .menu-btn {
             position: fixed;
             top: 20px;
@@ -289,7 +288,6 @@
             <i class="fas fa-times"></i>
         </div>
         
-        <!-- اللغة -->
         <div class="sidebar-section">
             <div class="sidebar-title" data-i18n="language">🌐 اللغة</div>
             <div class="lang-grid">
@@ -302,7 +300,6 @@
             </div>
         </div>
         
-        <!-- المساعدة -->
         <div class="sidebar-section">
             <div class="sidebar-title" data-i18n="help">📖 المساعدة</div>
             <div class="help-text">
@@ -310,12 +307,9 @@
                 <p><i class="fas fa-sliders-h"></i> <span data-i18n="help2">اختر فيديو أو صوت</span></p>
                 <p><i class="fas fa-video"></i> <span data-i18n="help3">اختر الجودة المناسبة</span></p>
                 <p><i class="fas fa-download"></i> <span data-i18n="help4">اضغط تحميل</span></p>
-                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط على زر التحميل، ثم اختر "Save Video"</span></p>
-                <p><i class="fas fa-folder"></i> <span data-i18n="help6">الفيديو يحفظ في الصور</span></p>
             </div>
         </div>
         
-        <!-- تثبيت التطبيق -->
         <div class="sidebar-section">
             <div class="sidebar-title" data-i18n="install">📱 تثبيت التطبيق</div>
             <div class="install-box">
@@ -390,8 +384,6 @@
                 help2: 'اختر فيديو أو صوت',
                 help3: 'اختر الجودة المناسبة',
                 help4: 'اضغط تحميل',
-                help5: 'لآيفون: اضغط على زر التحميل، ثم اختر "Save Video"',
-                help6: 'الفيديو يحفظ في الصور',
                 install: '📱 تثبيت التطبيق',
                 install1: 'اضغط زر المشاركة (مربع)',
                 install2: 'اختر "إضافة للشاشة الرئيسية"',
@@ -412,8 +404,6 @@
                 help2: 'Choose video/audio',
                 help3: 'Select quality',
                 help4: 'Press download',
-                help5: 'iPhone: Tap download, then select "Save Video"',
-                help6: 'Video saves to Photos',
                 install: '📱 Install App',
                 install1: 'Tap share button',
                 install2: 'Choose "Add to Home Screen"',
@@ -434,8 +424,6 @@
                 help2: 'Video/ses seç',
                 help3: 'Kalite seç',
                 help4: 'İndir e bas',
-                help5: 'iPhone: İndir butonuna bas, "Save Video" seç',
-                help6: 'Video Fotoğraflara kaydedilir',
                 install: '📱 Uygulamayı Kur',
                 install1: 'Paylaş butonuna bas',
                 install2: 'Ana Ekrana Ekle seç',
@@ -456,56 +444,10 @@
                 help2: 'Выберите видео/аудио',
                 help3: 'Выберите качество',
                 help4: 'Нажмите скачать',
-                help5: 'iPhone: Нажмите скачать, затем "Save Video"',
-                help6: 'Видео сохраняется в Фото',
                 install: '📱 Установить приложение',
                 install1: 'Нажмите кнопку поделиться',
                 install2: 'Выберите "На экран «Домой»"',
                 install3: 'Нажмите "Добавить"'
-            },
-            fr: {
-                paste: 'Collez le lien',
-                video: '🎬 Vidéo',
-                audio: '🎵 Audio',
-                download: 'Télécharger',
-                q480: '480p',
-                q720: '720p',
-                q1080: '1080p',
-                qbest: '✨ Meilleur',
-                language: '🌐 Langue',
-                help: '📖 Aide',
-                help1: 'Collez le lien',
-                help2: 'Choisissez vidéo/audio',
-                help3: 'Choisissez qualité',
-                help4: 'Appuyez télécharger',
-                help5: 'iPhone: Appuyez télécharger, puis "Save Video"',
-                help6: 'La vidéo est enregistrée dans Photos',
-                install: '📱 Installer',
-                install1: 'Appuyez partager',
-                install2: 'Choisissez "Ajouter à l\'écran d\'accueil"',
-                install3: 'Appuyez "Ajouter"'
-            },
-            de: {
-                paste: 'Link einfügen',
-                video: '🎬 Video',
-                audio: '🎵 Audio',
-                download: 'Herunterladen',
-                q480: '480p',
-                q720: '720p',
-                q1080: '1080p',
-                qbest: '✨ Beste',
-                language: '🌐 Sprache',
-                help: '📖 Hilfe',
-                help1: 'Link einfügen',
-                help2: 'Video/Audio wählen',
-                help3: 'Qualität wählen',
-                help4: 'Herunterladen drücken',
-                help5: 'iPhone: Herunterladen drücken, dann "Save Video" wählen',
-                help6: 'Video wird in Fotos gespeichert',
-                install: '📱 App installieren',
-                install1: 'Teilen-Button drücken',
-                install2: '"Zum Home-Bildschirm" wählen',
-                install3: '"Hinzufügen" drücken'
             }
         };
 
@@ -525,7 +467,6 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isAndroid = /Android/.test(navigator.userAgent);
 
-        // تحديث اللغة
         function updateLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -534,7 +475,6 @@
                     el.innerHTML = translations[lang][key];
                 }
             });
-            
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (translations[lang][key]) {
@@ -579,7 +519,7 @@
             event.target.classList.add('active');
         }
 
-        // زر التحميل الذكي (نسخة واحدة لكل الأجهزة)
+        // زر التحميل الذكي مع Web Share API الذي يعيد تحميل نفسه
         document.getElementById('downloadBtn').addEventListener('click', async function() {
             const url = videoUrl.value.trim();
 
@@ -612,23 +552,23 @@
                     currentFilename = data.filename || 'video.mp4';
                     currentTitle = data.title || 'EasyDown Video';
 
-                    // ✅ آيفون + فيديو = مشاركة (الحل الذكي مع إعادة التحميل)
+                    // ✅ آيفون + فيديو = مشاركة ذكية
                     if (isIOS && currentMode === 'video') {
                         try {
-                            // محاولة المشاركة
+                            document.getElementById('status').innerHTML = '📱 ' + (currentLang === 'ar' ? 'جاري تجهيز المشاركة...' : 'Preparing share...');
+                            
                             await navigator.share({
                                 title: currentTitle,
                                 url: currentVideoUrl
                             });
                             
-                            // نجاح المشاركة
                             document.getElementById('status').innerHTML = '✅ ' + (currentLang === 'ar' ? 'تمت المشاركة!' : 'Shared!');
                             setTimeout(() => document.getElementById('status').innerHTML = '', 2000);
                             
                         } catch (shareError) {
                             console.log('Share error:', shareError);
                             
-                            // ✅ حل مشكلة iOS (الخلل المعروف)
+                            // ✅ الحل السحري: إذا كان الخطأ بسبب الخلل، أعِد تحميل الصفحة
                             if (shareError.name === 'NotAllowedError' || 
                                 shareError.name === 'InvalidStateError' ||
                                 shareError.message.includes('promiseReactionJobWithoutPromise')) {
@@ -640,7 +580,7 @@
                                     window.location.reload();
                                 }, 1500);
                             } else {
-                                // إذا كان الخطأ بسبب إلغاء المستخدم، نفتح الرابط مباشرة
+                                // إذا ألغى المستخدم المشاركة، نفتح الرابط مباشرة
                                 window.open(currentVideoUrl, '_blank');
                                 document.getElementById('status').innerHTML = '';
                             }
@@ -670,7 +610,6 @@
             }
         });
 
-        // إغلاق القائمة عند النقر خارجها
         document.addEventListener('click', function(event) {
             const menuBtn = document.querySelector('.menu-btn');
             if (!sidebar.contains(event.target) && !menuBtn.contains(event.target) && sidebar.classList.contains('open')) {
@@ -678,7 +617,6 @@
             }
         });
 
-        // اللغة الافتراضية
         updateLanguage('ar');
     </script>
 </body>
