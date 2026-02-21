@@ -4,6 +4,11 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
+
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -48,15 +53,43 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
+        # إعدادات yt-dlp الأساسية
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'verbose': True,
         }
 
         # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+            logger.info("✅ تم العثور على ملف الكوكيز")
+
+        # إعدادات خاصة لفيسبوك وانستغرام
+        if 'facebook.com' in url or 'fb.watch' in url or 'instagram.com' in url:
+            logger.info("📱 استخدام إعدادات خاصة لفيسبوك/انستغرام")
+            ydl_opts['impersonate'] = 'chrome'  # محاكاة متصفح حقيقي
+            ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
+            ydl_opts['http_headers'] = {
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'ar,en-US;q=0.7,en;q=0.3',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Cache-Control': 'max-age=0',
+            }
+
+        # إعدادات خاصة بيوتيوب
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            logger.info("🎬 استخدام إعدادات خاصة بيوتيوب")
+            ydl_opts['extractor_args'] = {'youtube': ['bgutil']}
+            ydl_opts['impersonate'] = 'chrome'
 
         if mode == 'audio':
             ydl_opts.update({
@@ -76,6 +109,8 @@ def download():
             else:
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
+        logger.info(f"بدء تحميل: {url}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -91,6 +126,8 @@ def download():
 
         download_url = f"/v/{filename}"
 
+        logger.info(f"✅ تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
             'download_url': download_url,
@@ -99,6 +136,7 @@ def download():
         })
 
     except Exception as e:
+        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
