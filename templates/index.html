@@ -203,6 +203,15 @@
             padding: 20px;
             color: rgba(255,255,255,0.3);
         }
+        .share-note {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            color: #ccc;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -260,10 +269,11 @@
             
             <video id="videoPlayer" controls playsinline webkit-playsinline></video>
             
-            <a id="downloadLink" class="save-btn" style="display: none;"></a>
             <button class="save-btn" onclick="saveVideo()">
                 <i class="fas fa-download"></i> حفظ الفيديو
             </button>
+            
+            <div id="shareNote" class="share-note" style="display: none;"></div>
         </div>
     </div>
 
@@ -279,7 +289,12 @@
         const videoPlayer = document.getElementById('videoPlayer');
         const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
-        const downloadLink = document.getElementById('downloadLink');
+        const shareNote = document.getElementById('shareNote');
+
+        // كشف نوع الجهاز
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isMobile = isIOS || isAndroid;
 
         function clearInput() {
             videoUrl.value = '';
@@ -314,15 +329,70 @@
             videoPlayer.pause();
             videoPlayer.src = '';
             currentVideoUrl = '';
+            shareNote.style.display = 'none';
         }
 
-        function saveVideo() {
+        // دالة حفظ الفيديو الذكية (تشتغل على كل الأجهزة)
+        async function saveVideo() {
             if (!currentVideoUrl) return;
+
+            // ✅ لآيفون: استخدام Web Share API
+            if (isIOS && navigator.share && navigator.canShare) {
+                try {
+                    shareNote.style.display = 'block';
+                    shareNote.innerHTML = '⏳ جاري تجهيز الفيديو للمشاركة...';
+                    
+                    // جلب الفيديو وتحويله لملف
+                    const response = await fetch(currentVideoUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], currentFilename, { type: 'video/mp4' });
+                    
+                    // التأكد أن مشاركة الملفات مدعومة
+                    if (navigator.canShare({ files: [file] })) {
+                        shareNote.innerHTML = '📱 اختر "Save Video" من القائمة';
+                        
+                        // فتح قائمة المشاركة
+                        await navigator.share({
+                            files: [file],
+                            title: 'حفظ الفيديو'
+                        });
+                        
+                        shareNote.innerHTML = '✅ تمت المشاركة!';
+                        setTimeout(() => {
+                            shareNote.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        // إذا لم تكن مشاركة الملفات مدعومة، نستخدم الطريقة العادية
+                        fallbackDownload();
+                    }
+                } catch (error) {
+                    console.log('Share cancelled or failed:', error);
+                    shareNote.style.display = 'none';
+                }
+            } 
+            // ✅ للأندرويد والكمبيوتر: التحميل المباشر
+            else {
+                fallbackDownload();
+            }
+        }
+
+        // طريقة التحميل العادية (للأندرويد والكمبيوتر)
+        function fallbackDownload() {
+            const link = document.createElement('a');
+            link.href = currentVideoUrl;
+            link.download = currentFilename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             
-            // إنشاء رابط تحميل مؤقت
-            downloadLink.href = currentVideoUrl;
-            downloadLink.download = currentFilename;
-            downloadLink.click();
+            // رسالة تأكيد
+            if (!isIOS) {
+                shareNote.style.display = 'block';
+                shareNote.innerHTML = '✅ بدأ التحميل...';
+                setTimeout(() => {
+                    shareNote.style.display = 'none';
+                }, 2000);
+            }
         }
 
         document.getElementById('downloadBtn').addEventListener('click', async function() {
