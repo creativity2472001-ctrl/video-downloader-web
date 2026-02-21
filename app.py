@@ -5,6 +5,7 @@ import uuid
 import time
 import threading
 import logging
+import traceback
 
 # إعداد التسجيل
 logging.basicConfig(level=logging.INFO)
@@ -64,40 +65,31 @@ def download():
             'retries': 10,
             'fragment_retries': 10,
             'extractor_retries': 5,
-            'impersonate': 'chrome',  # مهم لجميع المواقع
+            'impersonate': 'chrome',
         }
 
-        # ✅ التحقق من وجود ملف الكوكيز
-        cookies_path = 'cookies.txt'
-        if os.path.exists(cookies_path):
-            ydl_opts['cookiefile'] = cookies_path
+        # التحقق من وجود ملف الكوكيز
+        if os.path.exists('cookies.txt'):
+            ydl_opts['cookiefile'] = 'cookies.txt'
             logger.info("✅ تم العثور على ملف الكوكيز")
         else:
-            logger.warning("⚠️ ملف الكوكيز غير موجود - بعض المواقع قد ترفض الاتصال")
+            logger.warning("⚠️ ملف الكوكيز غير موجود")
 
-        # ✅ إعدادات خاصة لكل موقع
+        # إعدادات خاصة لكل موقع
         if 'youtube.com' in url or 'youtu.be' in url:
             logger.info("🎬 إعدادات يوتيوب")
-            ydl_opts['extractor_args'] = {'youtube': ['player-client=web', 'skip=webpage']}
+            ydl_opts['extractor_args'] = {'youtube': ['player-client=web']}
             
         elif 'instagram.com' in url:
             logger.info("📷 إعدادات انستغرام")
             ydl_opts['extractor_args'] = {'instagram': ['no-check-certificate']}
-            # إضافة هيدرات إضافية لانستغرام
             ydl_opts['http_headers'] = {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive',
             }
             
         elif 'tiktok.com' in url:
             logger.info("🎵 إعدادات تيك توك")
             ydl_opts['extractor_args'] = {'tiktok': ['no-check-certificate']}
-            ydl_opts['http_headers'] = {
-                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-            }
             
         elif 'facebook.com' in url or 'fb.watch' in url:
             logger.info("📘 إعدادات فيسبوك")
@@ -151,7 +143,10 @@ def download():
         })
 
     except Exception as e:
+        # تسجيل الخطأ بالتفصيل
+        error_details = traceback.format_exc()
         logger.error(f"❌ خطأ في التحميل: {str(e)}")
+        logger.error(f"🔍 تفاصيل: {error_details}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
