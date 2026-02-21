@@ -88,9 +88,12 @@ def download():
         # إعدادات خاصة بيوتيوب
         elif 'youtube.com' in url or 'youtu.be' in url:
             logger.info("🎬 استخدام إعدادات خاصة بيوتيوب")
-            # ✅ استخدام ytse بدلاً من bgutil (يدعم JavaScript)
-            ydl_opts['extractor_args'] = {'youtube': ['ytse']}
+            # ✅ استخدام إعدادات يدعمها yt-dlp الحديث مع Node.js
+            ydl_opts['extractor_args'] = {'youtube': ['player-client=web']}
             ydl_opts['impersonate'] = 'chrome'
+            # زيادة timeout لتجنب المشاكل
+            ydl_opts['socket_timeout'] = 30
+            ydl_opts['retries'] = 3
 
         if mode == 'audio':
             ydl_opts.update({
