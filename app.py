@@ -4,10 +4,6 @@ import yt_dlp
 import uuid
 import time
 import threading
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -52,37 +48,22 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
-        # إعدادات بسيطة وواضحة
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
-            'verbose': True,  # هذا راح يظهر تفاصيل أكثر في الـ logs
         }
 
-        # إضافة ملف الكوكيز إذا كان موجوداً
-        if os.path.exists('cookies.txt'):
-            ydl_opts['cookiefile'] = 'cookies.txt'
-            logger.info("✅ تم العثور على ملف الكوكيز")
-
-        # إعدادات الصوت أو الفيديو
         if mode == 'audio':
-            ydl_opts['format'] = 'bestaudio/best'
-            ydl_opts['postprocessors'] = [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-            }]
+            ydl_opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                }],
+            })
         else:
-            if quality == '480p':
-                ydl_opts['format'] = 'best[height<=480]'
-            elif quality == '720p':
-                ydl_opts['format'] = 'best[height<=720]'
-            elif quality == '1080p':
-                ydl_opts['format'] = 'best[height<=1080]'
-            else:
-                ydl_opts['format'] = 'best[ext=mp4]/best'
-
-        logger.info(f"بدء تحميل: {url}")
+            ydl_opts['format'] = 'best[ext=mp4]/best'
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -97,28 +78,27 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
+        # رابط مباشر للفيديو بدون HTML
         download_url = f"/v/{filename}"
-
-        logger.info(f"✅ تم التحميل بنجاح: {filename}")
 
         return jsonify({
             'success': True,
             'download_url': download_url,
-            'title': title,
-            'filename': filename
+            'title': title
         })
 
     except Exception as e:
-        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
 def get_video(filename):
+    """مسار مباشر للفيديو - لا يوجد HTML"""
     path = os.path.join(DOWNLOAD_DIR, filename)
-    if not os.path.exists(path):
-        return 'الملف غير موجود', 404
-    return send_file(path, mimetype='video/mp4')
+    return send_file(
+        path,
+        mimetype='video/mp4',
+        as_attachment=False
+    )
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
