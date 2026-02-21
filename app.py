@@ -54,7 +54,7 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
-        # إعدادات yt-dlp المحسنة
+        # إعدادات yt-dlp الأساسية
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
@@ -64,18 +64,17 @@ def download():
             'retries': 10,
             'fragment_retries': 10,
             'extractor_retries': 5,
+            'impersonate': 'chrome',  # مهم لجميع المواقع
         }
 
-        # ✅ التأكد من وجود ملف الكوكيز
-        if os.path.exists('cookies.txt'):
-            ydl_opts['cookiefile'] = 'cookies.txt'
+        # ✅ التحقق من وجود ملف الكوكيز
+        cookies_path = 'cookies.txt'
+        if os.path.exists(cookies_path):
+            ydl_opts['cookiefile'] = cookies_path
             logger.info("✅ تم العثور على ملف الكوكيز")
         else:
-            logger.warning("⚠️ ملف الكوكيز غير موجود!")
+            logger.warning("⚠️ ملف الكوكيز غير موجود - بعض المواقع قد ترفض الاتصال")
 
-        # ✅ إعدادات impersonate لجميع المواقع
-        ydl_opts['impersonate'] = 'chrome'
-        
         # ✅ إعدادات خاصة لكل موقع
         if 'youtube.com' in url or 'youtu.be' in url:
             logger.info("🎬 إعدادات يوتيوب")
@@ -84,18 +83,27 @@ def download():
         elif 'instagram.com' in url:
             logger.info("📷 إعدادات انستغرام")
             ydl_opts['extractor_args'] = {'instagram': ['no-check-certificate']}
+            # إضافة هيدرات إضافية لانستغرام
             ydl_opts['http_headers'] = {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive',
             }
             
         elif 'tiktok.com' in url:
             logger.info("🎵 إعدادات تيك توك")
             ydl_opts['extractor_args'] = {'tiktok': ['no-check-certificate']}
+            ydl_opts['http_headers'] = {
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+            }
             
         elif 'facebook.com' in url or 'fb.watch' in url:
             logger.info("📘 إعدادات فيسبوك")
             ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
 
+        # إعدادات الصوت أو الفيديو حسب الجودة
         if mode == 'audio':
             ydl_opts.update({
                 'format': 'bestaudio/best',
@@ -116,10 +124,12 @@ def download():
 
         logger.info(f"بدء تحميل: {url}")
         
+        # تنفيذ التحميل
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
 
+        # البحث عن الملف المحمل
         filename = None
         for f in os.listdir(DOWNLOAD_DIR):
             if f.startswith(file_id):
