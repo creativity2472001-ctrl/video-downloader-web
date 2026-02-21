@@ -4,6 +4,11 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
+
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -48,15 +53,26 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
-        # إعدادات yt-dlp المتقدمة لجميع المواقع
+        # إعدادات yt-dlp الأساسية (بدون f-string معقدة)
         ydl_opts = {
-            'outtmpl': f"{base}.%(ext)s",
+            'outtmpl': base + '.%(ext)s',  # تم إصلاح f-string
             'quiet': True,
             'noplaylist': True,
-            'cookiefile': 'cookies.txt',  # ملف الكوكيز
-            'extractor_args': {'youtube': ['bgutil']},  # لليوتيوب
-            'impersonate': 'chrome',  # انتحال متصفح لفيسبوك
         }
+
+        # إضافة ملف الكوكيز إذا كان موجوداً
+        if os.path.exists('cookies.txt'):
+            ydl_opts['cookiefile'] = 'cookies.txt'
+
+        # إضافة impersonate للمواقع التي تحتاجه
+        if 'facebook.com' in url or 'instagram.com' in url:
+            ydl_opts['impersonate'] = 'chrome'
+            logger.info("Using impersonate for Facebook/Instagram")
+
+        # إضافة PO Token لليوتيوب
+        if 'youtube.com' in url or 'youtu.be' in url:
+            ydl_opts['extractor_args'] = {'youtube': ['bgutil']}
+            logger.info("Using PO Token for YouTube")
 
         if mode == 'audio':
             ydl_opts.update({
@@ -67,7 +83,6 @@ def download():
                 }],
             })
         else:
-            # تحسين اختيار الجودة
             if quality == '480p':
                 ydl_opts['format'] = 'best[height<=480]'
             elif quality == '720p':
@@ -77,6 +92,8 @@ def download():
             else:
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
+        logger.info(f"بدء تحميل: {url}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -93,6 +110,8 @@ def download():
         # رابط مباشر للفيديو
         download_url = f"/v/{filename}"
 
+        logger.info(f"تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
             'download_url': download_url,
@@ -101,8 +120,7 @@ def download():
         })
 
     except Exception as e:
-        # تسجيل الخطأ للمساعدة في التصحيح
-        print(f"Download error: {e}")
+        logger.error(f"Download error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
@@ -120,4 +138,5 @@ def get_video(filename):
     )
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
