@@ -4,6 +4,11 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
+
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -12,10 +17,11 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be",
-    "tiktok.com", "vm.tiktok.com",
-    "instagram.com", "www.instagram.com",
-    "facebook.com", "fb.watch",
-    "twitter.com", "x.com"
+    "tiktok.com", "vm.tiktok.com", "vt.tiktok.com",
+    "instagram.com", "www.instagram.com", "instagr.am",
+    "facebook.com", "fb.watch", "www.facebook.com",
+    "twitter.com", "x.com", "www.twitter.com",
+    "snapchat.com", "www.snapchat.com"
 ]
 
 def cleanup():
@@ -48,15 +54,45 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
+        # إعدادات yt-dlp المحسنة لجميع المواقع
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'verbose': True,
+            'socket_timeout': 60,
+            'retries': 10,
+            'fragment_retries': 10,
+            'extractor_retries': 5,
         }
 
         # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+            logger.info("✅ تم العثور على ملف الكوكيز")
+
+        # إعدادات impersonate لجميع المواقع
+        ydl_opts['impersonate'] = 'chrome'
+        
+        # إعدادات خاصة لكل موقع
+        if 'youtube.com' in url or 'youtu.be' in url:
+            logger.info("🎬 إعدادات يوتيوب")
+            ydl_opts['extractor_args'] = {'youtube': ['player-client=web', 'skip=webpage']}
+            
+        elif 'instagram.com' in url:
+            logger.info("📷 إعدادات انستغرام")
+            ydl_opts['extractor_args'] = {'instagram': ['no-check-certificate']}
+            ydl_opts['http_headers'] = {
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+            }
+            
+        elif 'tiktok.com' in url:
+            logger.info("🎵 إعدادات تيك توك")
+            ydl_opts['extractor_args'] = {'tiktok': ['no-check-certificate']}
+            
+        elif 'facebook.com' in url or 'fb.watch' in url:
+            logger.info("📘 إعدادات فيسبوك")
+            ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
 
         if mode == 'audio':
             ydl_opts.update({
@@ -76,6 +112,8 @@ def download():
             else:
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
+        logger.info(f"بدء تحميل: {url}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -91,6 +129,8 @@ def download():
 
         download_url = f"/v/{filename}"
 
+        logger.info(f"✅ تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
             'download_url': download_url,
@@ -99,6 +139,7 @@ def download():
         })
 
     except Exception as e:
+        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
