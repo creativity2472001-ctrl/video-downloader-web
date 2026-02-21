@@ -276,15 +276,6 @@
             padding: 20px;
             color: rgba(255,255,255,0.3);
         }
-        .share-note {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 0.9rem;
-            color: #ccc;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -319,7 +310,7 @@
                 <p><i class="fas fa-sliders-h"></i> <span data-i18n="help2">اختر فيديو أو صوت</span></p>
                 <p><i class="fas fa-video"></i> <span data-i18n="help3">اختر الجودة المناسبة</span></p>
                 <p><i class="fas fa-download"></i> <span data-i18n="help4">اضغط تحميل</span></p>
-                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط "Save Video"</span></p>
+                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط على رابط التحميل المباشر ثم اضغط مطولاً على الفيديو</span></p>
                 <p><i class="fas fa-folder"></i> <span data-i18n="help6">الفيديو يحفظ في الصور</span></p>
             </div>
         </div>
@@ -399,7 +390,7 @@
                 help2: 'اختر فيديو أو صوت',
                 help3: 'اختر الجودة المناسبة',
                 help4: 'اضغط تحميل',
-                help5: 'لآيفون: اضغط "Save Video"',
+                help5: 'لآيفون: اضغط على رابط التحميل المباشر ثم اضغط مطولاً على الفيديو',
                 help6: 'الفيديو يحفظ في الصور',
                 install: '📱 تثبيت التطبيق',
                 install1: 'اضغط زر المشاركة (مربع)',
@@ -421,7 +412,7 @@
                 help2: 'Choose video/audio',
                 help3: 'Select quality',
                 help4: 'Press download',
-                help5: 'iPhone: Tap "Save Video"',
+                help5: 'iPhone: Tap the direct download link, then long press on video',
                 help6: 'Video saves to Photos',
                 install: '📱 Install App',
                 install1: 'Tap share button',
@@ -443,7 +434,7 @@
                 help2: 'Video/ses seç',
                 help3: 'Kalite seç',
                 help4: 'İndir e bas',
-                help5: 'iPhone: "Save Video" seç',
+                help5: 'iPhone: Direkt bağlantıya tıkla, videoya uzun bas',
                 help6: 'Video Fotoğraflara kaydedilir',
                 install: '📱 Uygulamayı Kur',
                 install1: 'Paylaş butonuna bas',
@@ -465,56 +456,12 @@
                 help2: 'Выберите видео/аудио',
                 help3: 'Выберите качество',
                 help4: 'Нажмите скачать',
-                help5: 'iPhone: Нажмите "Save Video"',
+                help5: 'iPhone: Нажмите прямую ссылку, затем долгое нажатие на видео',
                 help6: 'Видео сохраняется в Фото',
                 install: '📱 Установить приложение',
                 install1: 'Нажмите кнопку поделиться',
                 install2: 'Выберите "На экран «Домой»"',
                 install3: 'Нажмите "Добавить"'
-            },
-            fr: {
-                paste: 'Collez le lien',
-                video: '🎬 Vidéo',
-                audio: '🎵 Audio',
-                download: 'Télécharger',
-                q480: '480p',
-                q720: '720p',
-                q1080: '1080p',
-                qbest: '✨ Meilleur',
-                language: '🌐 Langue',
-                help: '📖 Aide',
-                help1: 'Collez le lien',
-                help2: 'Choisissez vidéo/audio',
-                help3: 'Choisissez qualité',
-                help4: 'Appuyez télécharger',
-                help5: 'iPhone: Appuyez "Save Video"',
-                help6: 'La vidéo est enregistrée dans Photos',
-                install: '📱 Installer',
-                install1: 'Appuyez partager',
-                install2: 'Choisissez "Ajouter à l\'écran d\'accueil"',
-                install3: 'Appuyez "Ajouter"'
-            },
-            de: {
-                paste: 'Link einfügen',
-                video: '🎬 Video',
-                audio: '🎵 Audio',
-                download: 'Herunterladen',
-                q480: '480p',
-                q720: '720p',
-                q1080: '1080p',
-                qbest: '✨ Beste',
-                language: '🌐 Sprache',
-                help: '📖 Hilfe',
-                help1: 'Link einfügen',
-                help2: 'Video/Audio wählen',
-                help3: 'Qualität wählen',
-                help4: 'Herunterladen drücken',
-                help5: 'iPhone: "Save Video" drücken',
-                help6: 'Video wird in Fotos gespeichert',
-                install: '📱 App installieren',
-                install1: 'Teilen-Button drücken',
-                install2: '"Zum Home-Bildschirm" wählen',
-                install3: '"Hinzufügen" drücken'
             }
         };
 
@@ -525,12 +472,8 @@
         let currentVideoUrl = '';
         let currentFilename = 'video.mp4';
 
-        const mainScreen = document.getElementById('mainScreen');
-        const videoContainer = document.getElementById('videoContainer');
-        const videoPlayer = document.getElementById('videoPlayer');
         const videoUrl = document.getElementById('videoUrl');
         const inputWrapper = document.getElementById('inputWrapper');
-        const shareNote = document.getElementById('shareNote');
         const sidebar = document.getElementById('sidebar');
 
         // كشف نوع الجهاز
@@ -555,21 +498,11 @@
             });
         }
 
-        // تغيير اللغة
         function changeLanguage(lang) {
             updateLanguage(lang);
             sidebar.classList.remove('open');
-            
-            // تحديث الأزرار النشطة
-            document.querySelectorAll('.lang-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.textContent.includes(translations[lang].name)) {
-                    item.classList.add('active');
-                }
-            });
         }
 
-        // فتح/غلق القائمة
         function toggleSidebar() {
             sidebar.classList.toggle('open');
         }
@@ -601,7 +534,7 @@
             event.target.classList.add('active');
         }
 
-        // دالة التحميل الذكية
+        // دالة التحميل (مبسطة وموثوقة)
         async function handleDownload() {
             const url = videoUrl.value.trim();
 
@@ -614,7 +547,7 @@
 
             downloading = true;
             document.getElementById('downloadBtn').disabled = true;
-            document.getElementById('status').innerHTML = '<div class="loader"></div>';
+            document.getElementById('status').innerHTML = '<div class="loader"></div><p>' + (currentLang === 'ar' ? 'جاري التحميل...' : 'Downloading...') + '</p>';
 
             try {
                 const response = await fetch('/download', {
@@ -633,44 +566,22 @@
                     currentVideoUrl = data.download_url;
                     currentFilename = data.filename || 'video.mp4';
 
-                    // ✅ زر ذكي: آيفون + فيديو = Web Share
-                    if (isIOS && currentMode === 'video' && navigator.share && navigator.canShare) {
-                        try {
-                            document.getElementById('status').innerHTML = '📱 جاري التجهيز...';
-                            
-                            const videoResponse = await fetch(currentVideoUrl);
-                            const blob = await videoResponse.blob();
-                            const file = new File([blob], currentFilename, { type: 'video/mp4' });
-                            
-                            if (navigator.canShare({ files: [file] })) {
-                                await navigator.share({
-                                    files: [file],
-                                    title: 'EasyDown Video'
-                                });
-                                document.getElementById('status').innerHTML = '✅ تمت المشاركة!';
-                            }
-                        } catch (error) {
-                            console.log('Share cancelled');
-                            document.getElementById('status').innerHTML = '';
-                        }
-                    } 
-                    // ✅ باقي الحالات: تحميل مباشر
-                    else {
-                        const link = document.createElement('a');
-                        link.href = currentVideoUrl;
-                        link.download = currentFilename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        document.getElementById('status').innerHTML = '✅ بدأ التحميل!';
-                    }
-                    
-                    setTimeout(() => {
-                        document.getElementById('status').innerHTML = '';
-                    }, 3000);
-                    
+                    // رابط تحميل مباشر بسيط (يعمل على جميع الأجهزة)
+                    document.getElementById('status').innerHTML = `
+                        <div style="background: rgba(40,167,69,0.2); border-radius: 15px; padding: 20px; margin-top: 20px;">
+                            <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✅ ${currentLang === 'ar' ? 'الفيديو جاهز!' : 'Video ready!'}</p>
+                            <a href="${currentVideoUrl}" download="${currentFilename}" style="display: block; background: #28a745; color: white; text-decoration: none; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;">
+                                <i class="fas fa-download"></i> ${currentLang === 'ar' ? 'تحميل مباشر' : 'Direct Download'}
+                            </a>
+                            ${isIOS ? `
+                                <p style="color: #ccc; font-size: 0.8rem; margin-top: 15px;">
+                                    <i class="fas fa-mobile-alt"></i> ${currentLang === 'ar' ? 'بعد فتح الرابط، اضغط مطولاً على الفيديو واختر "Save Video"' : 'After opening the link, long press on video and select "Save Video"'}
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
                 } else {
-                    document.getElementById('status').innerHTML = '❌ ' + (data.error || 'فشل التحميل');
+                    document.getElementById('status').innerHTML = '❌ ' + (data.error || (currentLang === 'ar' ? 'فشل التحميل' : 'Download failed'));
                 }
             } catch {
                 document.getElementById('status').innerHTML = '❌ ' + (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection error');
