@@ -6,7 +6,6 @@ import time
 import threading
 import logging
 
-# إعداد التسجيل
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -53,35 +52,26 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
-        # إعدادات yt-dlp الأساسية (بدون f-string معقدة)
+        # إعدادات بسيطة وواضحة
         ydl_opts = {
-            'outtmpl': base + '.%(ext)s',  # تم إصلاح f-string
+            'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'verbose': True,  # هذا راح يظهر تفاصيل أكثر في الـ logs
         }
 
         # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+            logger.info("✅ تم العثور على ملف الكوكيز")
 
-        # إضافة impersonate للمواقع التي تحتاجه
-        if 'facebook.com' in url or 'instagram.com' in url:
-            ydl_opts['impersonate'] = 'chrome'
-            logger.info("Using impersonate for Facebook/Instagram")
-
-        # إضافة PO Token لليوتيوب
-        if 'youtube.com' in url or 'youtu.be' in url:
-            ydl_opts['extractor_args'] = {'youtube': ['bgutil']}
-            logger.info("Using PO Token for YouTube")
-
+        # إعدادات الصوت أو الفيديو
         if mode == 'audio':
-            ydl_opts.update({
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                }],
-            })
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+            }]
         else:
             if quality == '480p':
                 ydl_opts['format'] = 'best[height<=480]'
@@ -93,7 +83,7 @@ def download():
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
         logger.info(f"بدء تحميل: {url}")
-        
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -107,11 +97,10 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # رابط مباشر للفيديو
         download_url = f"/v/{filename}"
 
-        logger.info(f"تم التحميل بنجاح: {filename}")
-        
+        logger.info(f"✅ تم التحميل بنجاح: {filename}")
+
         return jsonify({
             'success': True,
             'download_url': download_url,
@@ -120,22 +109,15 @@ def download():
         })
 
     except Exception as e:
-        logger.error(f"Download error: {e}")
+        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/v/<filename>')
 def get_video(filename):
-    """مسار مباشر للفيديو"""
     path = os.path.join(DOWNLOAD_DIR, filename)
-    
     if not os.path.exists(path):
         return 'الملف غير موجود', 404
-    
-    return send_file(
-        path,
-        mimetype='video/mp4',
-        as_attachment=False
-    )
+    return send_file(path, mimetype='video/mp4')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
