@@ -10,35 +10,39 @@ app = Flask(__name__)
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# ===============================
-# تنظيف الملفات القديمة كل 30 دقيقة
-# ===============================
-def cleanup_old_files():
+ALLOWED_DOMAINS = [
+    "youtube.com", "youtu.be",
+    "tiktok.com", "vm.tiktok.com",
+    "instagram.com", "www.instagram.com",
+    "facebook.com", "fb.watch",
+    "twitter.com", "x.com"
+]
+
+def cleanup():
     while True:
         now = time.time()
-        for filename in os.listdir(DOWNLOAD_DIR):
-            path = os.path.join(DOWNLOAD_DIR, filename)
-            if os.path.isfile(path):
-                if now - os.path.getmtime(path) > 1800:  # 30 دقيقة
-                    os.remove(path)
+        for f in os.listdir(DOWNLOAD_DIR):
+            path = os.path.join(DOWNLOAD_DIR, f)
+            if os.path.isfile(path) and os.stat(path).st_mtime < now - 3600:
+                try: os.remove(path)
+                except: pass
         time.sleep(1800)
 
-threading.Thread(target=cleanup_old_files, daemon=True).start()
+threading.Thread(target=cleanup, daemon=True).start()
 
-# ===============================
-# الصفحة الرئيسية
-# ===============================
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ===============================
-# تحميل الفيديو
-# ===============================
 @app.route('/download', methods=['POST'])
 def download():
     data = request.get_json()
     url = data.get('url')
+    mode = data.get('mode', 'video')
+    quality = data.get('quality', 'best')
+
+    if not url:
+        return jsonify({'error': '❌ الرابط مطلوب'}), 400
 
     file_id = uuid.uuid4().hex[:8]
     base = os.path.join(DOWNLOAD_DIR, file_id)
@@ -46,13 +50,31 @@ def download():
     try:
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
-            'format': 'best[ext=mp4]/best',
             'quiet': True,
-            'noplaylist': True
+            'noplaylist': True,
         }
 
+        # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+
+        if mode == 'audio':
+            ydl_opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                }],
+            })
+        else:
+            if quality == '480p':
+                ydl_opts['format'] = 'best[height<=480]'
+            elif quality == '720p':
+                ydl_opts['format'] = 'best[height<=720]'
+            elif quality == '1080p':
+                ydl_opts['format'] = 'best[height<=1080]'
+            else:
+                ydl_opts['format'] = 'best[ext=mp4]/best'
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -65,31 +87,34 @@ def download():
                 break
 
         if not filename:
-            return jsonify({'error': 'File not found'}), 500
+            return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
+
+        download_url = f"/v/{filename}"
 
         return jsonify({
             'success': True,
-            'download_url': f"/v/{filename}",
-            'filename': filename,
-            'title': title
+            'download_url': download_url,
+            'title': title,
+            'filename': filename
         })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ===============================
-# تقديم الفيديو
-# ===============================
 @app.route('/v/<filename>')
 def get_video(filename):
+    """مسار مباشر للفيديو"""
     path = os.path.join(DOWNLOAD_DIR, filename)
+    
+    if not os.path.exists(path):
+        return 'الملف غير موجود', 404
+    
     return send_file(
         path,
         mimetype='video/mp4',
-        as_attachment=False,
-        download_name=filename
+        as_attachment=False
     )
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=False)
