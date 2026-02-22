@@ -29,6 +29,9 @@ def download():
             'quiet': True,
         }
 
+        if os.path.exists('cookies.txt'):
+            ydl_opts['cookiefile'] = 'cookies.txt'
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -39,52 +42,19 @@ def download():
                 filename = f
                 break
 
-        download_url = f"/video/{filename}"
-
         return jsonify({
             'success': True,
-            'download_url': download_url,
+            'download_url': f"/v/{filename}",
             'title': title
         })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/video/<filename>')
-def video_page(filename):
+@app.route('/v/<filename>')
+def get_video(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
-    return f'''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>EasyDown - فيديو</title>
-        <style>
-            body {{
-                background: #1a1a2e;
-                color: white;
-                font-family: sans-serif;
-                text-align: center;
-                padding: 20px;
-                margin: 0;
-            }}
-            video {{
-                width: 100%;
-                max-width: 600px;
-                border-radius: 15px;
-                background: black;
-                margin: 20px 0;
-            }}
-        </style>
-    </head>
-    <body>
-        <video controls>
-            <source src="/{DOWNLOAD_DIR}/{filename}" type="video/mp4">
-        </video>
-    </body>
-    </html>
-    '''
+    return send_file(path, mimetype='video/mp4')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
