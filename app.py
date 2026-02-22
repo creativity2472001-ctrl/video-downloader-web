@@ -4,11 +4,37 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
+
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+ALLOWED_DOMAINS = [
+    "youtube.com", "youtu.be",
+    "tiktok.com", "vm.tiktok.com", "vt.tiktok.com",
+    "instagram.com", "www.instagram.com", "instagr.am",
+    "facebook.com", "fb.watch", "www.facebook.com",
+    "twitter.com", "x.com", "www.twitter.com",
+    "snapchat.com", "www.snapchat.com"
+]
+
+def cleanup():
+    while True:
+        now = time.time()
+        for f in os.listdir(DOWNLOAD_DIR):
+            path = os.path.join(DOWNLOAD_DIR, f)
+            if os.path.isfile(path) and os.stat(path).st_mtime < now - 3600:
+                try: os.remove(path)
+                except: pass
+        time.sleep(1800)
+
+threading.Thread(target=cleanup, daemon=True).start()
 
 @app.route('/')
 def index():
@@ -18,20 +44,74 @@ def index():
 def download():
     data = request.get_json()
     url = data.get('url')
+    mode = data.get('mode', 'video')
+    quality = data.get('quality', 'best')
+
+    if not url:
+        return jsonify({'error': '❌ الرابط مطلوب'}), 400
 
     file_id = uuid.uuid4().hex[:8]
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
+        # إعدادات yt-dlp الأساسية
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
-            'format': 'best[ext=mp4]/best',
             'quiet': True,
+            'noplaylist': True,
+            'verbose': True,
+            'socket_timeout': 60,
+            'retries': 10,
+            'fragment_retries': 10,
+            'extractor_retries': 5,
+            'impersonate': 'chrome',
         }
 
+        # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+            logger.info("✅ تم العثور على ملف الكوكيز")
 
+        # إعدادات خاصة لكل موقع
+        if 'youtube.com' in url or 'youtu.be' in url:
+            logger.info("🎬 إعدادات يوتيوب")
+            ydl_opts['extractor_args'] = {'youtube': ['player-client=web', 'skip=webpage']}
+            
+        elif 'instagram.com' in url:
+            logger.info("📷 إعدادات انستغرام")
+            ydl_opts['extractor_args'] = {'instagram': ['no-check-certificate']}
+            ydl_opts['http_headers'] = {
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+            }
+            
+        elif 'tiktok.com' in url:
+            logger.info("🎵 إعدادات تيك توك")
+            ydl_opts['extractor_args'] = {'tiktok': ['no-check-certificate']}
+            
+        elif 'facebook.com' in url or 'fb.watch' in url:
+            logger.info("📘 إعدادات فيسبوك")
+            ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
+
+        if mode == 'audio':
+            ydl_opts.update({
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                }],
+            })
+        else:
+            if quality == '480p':
+                ydl_opts['format'] = 'best[height<=480]'
+            elif quality == '720p':
+                ydl_opts['format'] = 'best[height<=720]'
+            elif quality == '1080p':
+                ydl_opts['format'] = 'best[height<=1080]'
+            else:
+                ydl_opts['format'] = 'best[ext=mp4]/best'
+
+        logger.info(f"بدء تحميل: {url}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -42,17 +122,122 @@ def download():
                 filename = f
                 break
 
+        if not filename:
+            return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
+
+        # ✅ الرابط يشير لصفحة الفيديو مع زر الرجوع
+        download_url = f"/video/{filename}"
+
+        logger.info(f"✅ تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
-            'download_url': f"/v/{filename}",
-            'title': title
+            'download_url': download_url,
+            'title': title,
+            'filename': filename
         })
 
     except Exception as e:
+        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/v/<filename>')
-def get_video(filename):
+# ✅ صفحة مشاهدة الفيديو مع زر الرجوع وعداد 10 ثواني
+@app.route('/video/<filename>')
+def video_page(filename):
+    path = os.path.join(DOWNLOAD_DIR, filename)
+    
+    if not os.path.exists(path):
+        return 'الملف غير موجود', 404
+
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>EasyDown - فيديو</title>
+        <style>
+            body {{
+                background: #1a1a2e;
+                color: white;
+                font-family: sans-serif;
+                text-align: center;
+                padding: 20px;
+                margin: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+            }}
+            .back-btn {{
+                display: inline-block;
+                margin: 20px auto;
+                padding: 15px 30px;
+                background: #00d2ff;
+                color: white;
+                text-decoration: none;
+                border-radius: 50px;
+                font-weight: bold;
+                font-size: 1.2rem;
+                border: none;
+                cursor: pointer;
+            }}
+            video {{
+                width: 100%;
+                max-width: 600px;
+                border-radius: 15px;
+                background: black;
+                margin: 20px 0;
+            }}
+            .timer {{
+                font-size: 2rem;
+                color: #00d2ff;
+                margin: 20px 0;
+            }}
+            .note {{
+                color: #ccc;
+                margin-top: 20px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>🎬 الفيديو جاهز</h2>
+            
+            <video controls playsinline webkit-playsinline>
+                <source src="/get-video/{filename}" type="video/mp4">
+            </video>
+            
+            <div class="timer" id="timer">10</div>
+            <p class="note">⏳ سيتم إعادة تشغيل التطبيق تلقائياً بعد 10 ثواني</p>
+            <p class="note">📱 لحفظ الفيديو: اضغط على الثلاث نقاط (⋮) ثم Save Video</p>
+            <p class="note">🔹 إذا لم يظهر Save Video، استخدم زر الرجوع اليدوي</p>
+            
+            <button onclick="window.location.href='/'" class="back-btn">🔙 رجوع يدوي</button>
+        </div>
+
+        <script>
+            let seconds = 10;
+            const timer = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {{
+                seconds--;
+                timer.textContent = seconds;
+                
+                if (seconds <= 0) {{
+                    clearInterval(countdown);
+                    // إعادة تحميل الصفحة الرئيسية (وكأن التطبيق فتح من جديد)
+                    window.location.href = '/';
+                }}
+            }}, 1000);
+        </script>
+    </body>
+    </html>
+    '''
+
+# ✅ مسار الفيديو الخام (للتشغيل والتحميل)
+@app.route('/get-video/<filename>')
+def get_video_file(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
     return send_file(path, mimetype='video/mp4')
 
