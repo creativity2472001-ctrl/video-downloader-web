@@ -4,114 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EasyDown</title>
-
 <style>
-body {
-    background: #111827;
-    color: white;
-    font-family: sans-serif;
-    text-align: center;
-    padding: 30px;
-}
-input {
-    width: 90%;
-    padding: 15px;
-    border-radius: 12px;
-    border: none;
-    margin-bottom: 15px;
-}
-button {
-    padding: 15px 25px;
-    border: none;
-    border-radius: 12px;
-    background: #00d2ff;
-    color: black;
-    font-weight: bold;
-    cursor: pointer;
-}
-#status {
-    margin-top: 20px;
-}
+body { background:#111827; color:white; font-family:sans-serif; text-align:center; padding:30px; }
+input { width:90%; padding:15px; border-radius:12px; border:none; margin-bottom:15px; }
+button { padding:15px 25px; border:none; border-radius:12px; background:#00d2ff; color:black; font-weight:bold; cursor:pointer; }
+#status { margin-top:20px; }
 </style>
 </head>
 <body>
 
 <h1>EasyDown</h1>
-
 <input type="url" id="videoUrl" placeholder="الصق الرابط هنا">
 <br>
 <button id="downloadBtn">تحميل</button>
-
 <div id="status"></div>
 
 <script>
 const videoUrl = document.getElementById('videoUrl');
-const statusDiv = document.getElementById('status');
 const downloadBtn = document.getElementById('downloadBtn');
+const statusDiv = document.getElementById('status');
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 const isAndroid = /Android/.test(navigator.userAgent);
 
 let downloading = false;
+let newTab = null;
 
-async function handleDownload() {
+downloadBtn.addEventListener('click', async () => {
     const url = videoUrl.value.trim();
-    if (!url) {
-        statusDiv.innerHTML = "⚠️ الصق الرابط";
-        return;
-    }
-
+    if (!url) { statusDiv.innerHTML="⚠️ الصق الرابط"; return; }
     if (downloading) return;
-
     downloading = true;
     downloadBtn.disabled = true;
-    statusDiv.innerHTML = "⏳ جاري تنزيل الفيديو على السيرفر...";
+
+    // 🌟 افتح نافذة فارغة مباشرة عند الضغط على الزر
+    if (isIOS) {
+        newTab = window.open('about:blank', '_blank');
+        if (!newTab) { statusDiv.innerHTML="❌ الرجاء السماح بفتح النوافذ المنبثقة"; downloading=false; downloadBtn.disabled=false; return; }
+    }
+
+    statusDiv.innerHTML="⏳ جاري تنزيل الفيديو...";
 
     try {
-        // طلب التنزيل من السيرفر
         const response = await fetch('/download', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url })
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({url:url})
         });
-
         const data = await response.json();
+        if (!data.success) throw new Error(data.error);
 
-        if (!data.success) {
-            throw new Error(data.error);
-        }
-
-        const fileUrl = data.download_url; // رابط مباشر إلى الفيديو على السيرفر
+        const fileUrl = window.location.origin + data.download_url;
         const filename = data.filename || "video.mp4";
 
-        // ===============================
-        // 🍎 iOS — فتح الفيديو في Safari / Documents
-        // ===============================
-        if (isIOS) {
-            const newTab = window.open(fileUrl, '_blank');
-            if (!newTab) {
-                statusDiv.innerHTML = "❌ الرجاء السماح بفتح النوافذ المنبثقة";
-            } else {
-                statusDiv.innerHTML = "📱 افتح الفيديو واضغط مشاركة → Save Video أو اختر Documents";
-            }
+        // ✅ iOS: توجيه النافذة المفتوحة إلى الفيديو النهائي
+        if (isIOS && newTab) {
+            newTab.location.href = fileUrl;
+            statusDiv.innerHTML="📱 افتح الفيديو واضغط Share → Save Video أو Documents";
         }
-
-        // ===============================
-        // 🤖 Android — مشاركة الملف إذا ممكن
-        // ===============================
+        // 🤖 Android
         else if (isAndroid && navigator.share) {
             try {
-                const videoResponse = await fetch(fileUrl);
+                const videoResponse = await fetch(data.download_url);
                 const blob = await videoResponse.blob();
-                const file = new File([blob], filename, { type: 'video/mp4' });
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: filename });
-                    statusDiv.innerHTML = "✅ تمت المشاركة";
-                } else {
-                    throw new Error("Cannot share file");
-                }
-
+                const file = new File([blob], filename, { type:'video/mp4' });
+                if (navigator.canShare && navigator.canShare({ files:[file] })) {
+                    await navigator.share({ files:[file], title:filename });
+                    statusDiv.innerHTML="✅ تمت المشاركة";
+                } else throw new Error("Cannot share file");
             } catch {
                 const link = document.createElement('a');
                 link.href = fileUrl;
@@ -119,13 +79,10 @@ async function handleDownload() {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                statusDiv.innerHTML = "✅ بدأ التحميل";
+                statusDiv.innerHTML="✅ بدأ التحميل";
             }
         }
-
-        // ===============================
         // 💻 Desktop
-        // ===============================
         else {
             const link = document.createElement('a');
             link.href = fileUrl;
@@ -133,19 +90,18 @@ async function handleDownload() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            statusDiv.innerHTML = "✅ بدأ التحميل";
+            statusDiv.innerHTML="✅ بدأ التحميل";
         }
 
-    } catch (error) {
-        console.error(error);
-        statusDiv.innerHTML = "❌ فشل التحميل";
+    } catch(e) {
+        console.error(e);
+        statusDiv.innerHTML="❌ فشل التحميل";
+        if (newTab) newTab.close();
     }
 
-    downloading = false;
-    downloadBtn.disabled = false;
-}
-
-downloadBtn.addEventListener('click', handleDownload);
+    downloading=false;
+    downloadBtn.disabled=false;
+});
 </script>
 
 </body>
