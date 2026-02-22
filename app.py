@@ -125,7 +125,6 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # ✅ الرابط يشير لصفحة الفيديو مع زر الرجوع
         download_url = f"/video/{filename}"
 
         logger.info(f"✅ تم التحميل بنجاح: {filename}")
@@ -141,7 +140,6 @@ def download():
         logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# ✅ صفحة مشاهدة الفيديو مع زر الرجوع وعداد 10 ثواني
 @app.route('/video/<filename>')
 def video_page(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
@@ -197,6 +195,8 @@ def video_page(filename):
             .note {{
                 color: #ccc;
                 margin-top: 20px;
+                font-size: 0.9rem;
+                line-height: 1.6;
             }}
         </style>
     </head>
@@ -210,7 +210,7 @@ def video_page(filename):
             
             <div class="timer" id="timer">10</div>
             <p class="note">⏳ سيتم إعادة تشغيل التطبيق تلقائياً بعد 10 ثواني</p>
-            <p class="note">📱 لحفظ الفيديو: اضغط على الثلاث نقاط (⋮) ثم Save Video</p>
+            <p class="note">📱 لحفظ الفيديو: اضغط على الثلاث نقاط (⋮) في مشغل الفيديو ثم اختر Save Video</p>
             <p class="note">🔹 إذا لم يظهر Save Video، استخدم زر الرجوع اليدوي</p>
             
             <button onclick="window.location.href='/'" class="back-btn">🔙 رجوع يدوي</button>
@@ -226,7 +226,6 @@ def video_page(filename):
                 
                 if (seconds <= 0) {{
                     clearInterval(countdown);
-                    // إعادة تحميل الصفحة الرئيسية (وكأن التطبيق فتح من جديد)
                     window.location.href = '/';
                 }}
             }}, 1000);
@@ -235,7 +234,6 @@ def video_page(filename):
     </html>
     '''
 
-# ✅ مسار الفيديو الخام (للتشغيل والتحميل)
 @app.route('/get-video/<filename>')
 def get_video_file(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
