@@ -45,7 +45,6 @@ button {
 <div id="status"></div>
 
 <script>
-
 const videoUrl = document.getElementById('videoUrl');
 const statusDiv = document.getElementById('status');
 const downloadBtn = document.getElementById('downloadBtn');
@@ -56,7 +55,6 @@ const isAndroid = /Android/.test(navigator.userAgent);
 let downloading = false;
 
 async function handleDownload() {
-
     const url = videoUrl.value.trim();
     if (!url) {
         statusDiv.innerHTML = "⚠️ الصق الرابط";
@@ -70,7 +68,6 @@ async function handleDownload() {
     statusDiv.innerHTML = "⏳ جاري تجهيز الفيديو...";
 
     try {
-
         const response = await fetch('/download', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -88,81 +85,57 @@ async function handleDownload() {
         const filename = data.filename || "video.mp4";
 
         // ===============================
-        // 🍎 iOS — مشاركة مباشرة بالرابط
+        // 🍎 iOS — فتح الفيديو في تبويب جديد
         // ===============================
-        if (isIOS && navigator.share) {
-
-            try {
-
-                await navigator.share({
-                    title: filename,
-                    url: fullUrl
-                });
-
-                statusDiv.innerHTML = "✅ اختر Save Video من القائمة";
-
-            } catch (err) {
-
-                // إذا ألغى المستخدم أو فشل
-                window.location.href = fullUrl;
-            }
-
+        if (isIOS) {
+            window.open(fullUrl, '_blank'); // يفتح الفيديو في صفحة جديدة
+            statusDiv.innerHTML = "📱 افتح الفيديو واضغط مشاركة → Save Video أو اختر تطبيق مثل Documents";
         }
 
         // ===============================
         // 🤖 Android — مشاركة ملف
         // ===============================
         else if (isAndroid && navigator.share) {
-
             try {
-
                 const videoResponse = await fetch(fileUrl);
                 const blob = await videoResponse.blob();
                 const file = new File([blob], filename, { type: 'video/mp4' });
 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-
                     await navigator.share({
                         files: [file],
                         title: filename
                     });
-
                     statusDiv.innerHTML = "✅ تمت المشاركة";
-
                 } else {
                     throw new Error("Cannot share file");
                 }
-
             } catch {
-
                 const link = document.createElement('a');
                 link.href = fileUrl;
                 link.download = filename;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
                 statusDiv.innerHTML = "✅ بدأ التحميل";
             }
-
         }
 
         // ===============================
         // 💻 Desktop
         // ===============================
         else {
-
             const link = document.createElement('a');
             link.href = fileUrl;
             link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             statusDiv.innerHTML = "✅ بدأ التحميل";
         }
 
     } catch (error) {
+        console.error(error);
         statusDiv.innerHTML = "❌ فشل التحميل";
     }
 
@@ -171,7 +144,6 @@ async function handleDownload() {
 }
 
 downloadBtn.addEventListener('click', handleDownload);
-
 </script>
 
 </body>
