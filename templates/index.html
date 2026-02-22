@@ -65,9 +65,10 @@ async function handleDownload() {
 
     downloading = true;
     downloadBtn.disabled = true;
-    statusDiv.innerHTML = "⏳ جاري تجهيز الفيديو...";
+    statusDiv.innerHTML = "⏳ جاري تنزيل الفيديو على السيرفر...";
 
     try {
+        // طلب التنزيل من السيرفر
         const response = await fetch('/download', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -80,20 +81,23 @@ async function handleDownload() {
             throw new Error(data.error);
         }
 
-        const fileUrl = data.download_url;
-        const fullUrl = window.location.origin + fileUrl;
+        const fileUrl = data.download_url; // رابط مباشر إلى الفيديو على السيرفر
         const filename = data.filename || "video.mp4";
 
         // ===============================
-        // 🍎 iOS — فتح الفيديو في تبويب جديد
+        // 🍎 iOS — فتح الفيديو في Safari / Documents
         // ===============================
         if (isIOS) {
-            window.open(fullUrl, '_blank'); // يفتح الفيديو في صفحة جديدة
-            statusDiv.innerHTML = "📱 افتح الفيديو واضغط مشاركة → Save Video أو اختر تطبيق مثل Documents";
+            const newTab = window.open(fileUrl, '_blank');
+            if (!newTab) {
+                statusDiv.innerHTML = "❌ الرجاء السماح بفتح النوافذ المنبثقة";
+            } else {
+                statusDiv.innerHTML = "📱 افتح الفيديو واضغط مشاركة → Save Video أو اختر Documents";
+            }
         }
 
         // ===============================
-        // 🤖 Android — مشاركة ملف
+        // 🤖 Android — مشاركة الملف إذا ممكن
         // ===============================
         else if (isAndroid && navigator.share) {
             try {
@@ -102,14 +106,12 @@ async function handleDownload() {
                 const file = new File([blob], filename, { type: 'video/mp4' });
 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: filename
-                    });
+                    await navigator.share({ files: [file], title: filename });
                     statusDiv.innerHTML = "✅ تمت المشاركة";
                 } else {
                     throw new Error("Cannot share file");
                 }
+
             } catch {
                 const link = document.createElement('a');
                 link.href = fileUrl;
