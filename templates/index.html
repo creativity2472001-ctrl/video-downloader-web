@@ -275,44 +275,9 @@
             padding: 20px;
             color: rgba(255,255,255,0.3);
         }
-        .iframe-container {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #000;
-        }
-        .iframe-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .action-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        .share-btn {
-            background: var(--primary);
-            color: white;
-        }
-        .download-btn-action {
-            background: var(--success);
-            color: white;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
-    <!-- القائمة الجانبية -->
     <div class="menu-btn" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </div>
@@ -341,6 +306,8 @@
                 <p><i class="fas fa-sliders-h"></i> <span data-i18n="help2">اختر فيديو أو صوت</span></p>
                 <p><i class="fas fa-video"></i> <span data-i18n="help3">اختر الجودة المناسبة</span></p>
                 <p><i class="fas fa-download"></i> <span data-i18n="help4">اضغط تحميل</span></p>
+                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: بعد التحميل، سيتم إعادة تشغيل التطبيق تلقائياً</span></p>
+                <p><i class="fas fa-folder"></i> <span data-i18n="help6">الفيديو يحفظ في الصور</span></p>
             </div>
         </div>
         
@@ -399,19 +366,6 @@
     </div>
 
     <script>
-        let currentLang = 'ar';
-        let currentMode = 'video';
-        let currentQuality = 'best';
-        let downloading = false;
-        let currentVideoUrl = '';
-        let currentFilename = 'video.mp4';
-
-        const videoUrl = document.getElementById('videoUrl');
-        const inputWrapper = document.getElementById('inputWrapper');
-        const sidebar = document.getElementById('sidebar');
-
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
         const translations = {
             ar: {
                 paste: 'الصق الرابط هنا',
@@ -428,6 +382,8 @@
                 help2: 'اختر فيديو أو صوت',
                 help3: 'اختر الجودة المناسبة',
                 help4: 'اضغط تحميل',
+                help5: 'لآيفون: بعد التحميل، سيتم إعادة تشغيل التطبيق تلقائياً',
+                help6: 'الفيديو يحفظ في الصور',
                 install: '📱 تثبيت التطبيق',
                 install1: 'اضغط زر المشاركة (مربع)',
                 install2: 'اختر "إضافة للشاشة الرئيسية"',
@@ -448,6 +404,8 @@
                 help2: 'Choose video/audio',
                 help3: 'Select quality',
                 help4: 'Press download',
+                help5: 'iPhone: After download, app will restart automatically',
+                help6: 'Video saves to Photos',
                 install: '📱 Install App',
                 install1: 'Tap share button',
                 install2: 'Choose "Add to Home Screen"',
@@ -455,17 +413,29 @@
             }
         };
 
+        let currentLang = 'ar';
+        let currentMode = 'video';
+        let currentQuality = 'best';
+        let downloading = false;
+        let currentVideoUrl = '';
+
+        const videoUrl = document.getElementById('videoUrl');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const sidebar = document.getElementById('sidebar');
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
         function updateLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
+                if (translations[lang][key]) {
                     el.innerHTML = translations[lang][key];
                 }
             });
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
-                if (translations[lang] && translations[lang][key]) {
+                if (translations[lang][key]) {
                     el.placeholder = translations[lang][key];
                 }
             });
@@ -507,21 +477,6 @@
             event.target.classList.add('active');
         }
 
-        // دالة المشاركة الذكية
-        function shareVideo() {
-            if (!currentVideoUrl) return;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: 'EasyDown Video',
-                    url: currentVideoUrl
-                }).catch(() => {
-                    alert(isIOS ? 'تعذرت المشاركة. استخدم التحميل المباشر.' : 'Share failed. Use direct download.');
-                });
-            }
-        }
-
-        // دالة التحميل الرئيسية
         document.getElementById('downloadBtn').addEventListener('click', async function() {
             const url = videoUrl.value.trim();
 
@@ -550,39 +505,14 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    currentVideoUrl = data.download_url;
-                    currentFilename = data.filename || 'video.mp4';
-
-                    // عرض الفيديو مع خيارات المشاركة والتحميل
-                    document.getElementById('status').innerHTML = `
-                        <div style="background: rgba(40,167,69,0.2); border-radius: 15px; padding: 20px; margin-top: 20px;">
-                            <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✅ الفيديو جاهز!</p>
-                            
-                            <div class="iframe-container">
-                                <iframe src="${currentVideoUrl}" allowfullscreen></iframe>
-                            </div>
-                            
-                            <button onclick="shareVideo()" class="action-btn share-btn">
-                                <i class="fas fa-share"></i> مشاركة
-                            </button>
-                            
-                            <a href="${currentVideoUrl}" download="${currentFilename}" class="action-btn download-btn-action">
-                                <i class="fas fa-download"></i> تحميل مباشر
-                            </a>
-                            
-                            ${isIOS ? `
-                                <p style="color: #ccc; font-size: 0.8rem; margin-top: 15px;">
-                                    <i class="fas fa-mobile-alt"></i> إذا لم يظهر "Save Video"، استخدم التحميل المباشر ثم اضغط مطولاً على الفيديو
-                                </p>
-                            ` : ''}
-                        </div>
-                    `;
+                    window.location.href = data.download_url;
                 } else {
                     document.getElementById('status').innerHTML = '❌ ' + (data.error || 'فشل التحميل');
+                    downloading = false;
+                    this.disabled = false;
                 }
             } catch {
                 document.getElementById('status').innerHTML = '❌ خطأ في الاتصال';
-            } finally {
                 downloading = false;
                 this.disabled = false;
             }
