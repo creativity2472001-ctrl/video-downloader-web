@@ -4,6 +4,11 @@ import yt_dlp
 import uuid
 import time
 import threading
+import logging
+
+# إعداد التسجيل
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -12,10 +17,11 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 ALLOWED_DOMAINS = [
     "youtube.com", "youtu.be",
-    "tiktok.com", "vm.tiktok.com",
-    "instagram.com", "www.instagram.com",
-    "facebook.com", "fb.watch",
-    "twitter.com", "x.com"
+    "tiktok.com", "vm.tiktok.com", "vt.tiktok.com",
+    "instagram.com", "www.instagram.com", "instagr.am",
+    "facebook.com", "fb.watch", "www.facebook.com",
+    "twitter.com", "x.com", "www.twitter.com",
+    "snapchat.com", "www.snapchat.com"
 ]
 
 def cleanup():
@@ -48,14 +54,41 @@ def download():
     base = os.path.join(DOWNLOAD_DIR, file_id)
 
     try:
+        # إعدادات yt-dlp الأساسية
         ydl_opts = {
             'outtmpl': f"{base}.%(ext)s",
             'quiet': True,
             'noplaylist': True,
+            'verbose': True,
+            'socket_timeout': 60,
+            'retries': 10,
+            'fragment_retries': 10,
+            'extractor_retries': 5,
         }
 
+        # إضافة ملف الكوكيز إذا كان موجوداً
         if os.path.exists('cookies.txt'):
             ydl_opts['cookiefile'] = 'cookies.txt'
+            logger.info("✅ تم العثور على ملف الكوكيز")
+
+        # إعدادات impersonate لجميع المواقع
+        ydl_opts['impersonate'] = 'chrome'
+        
+        if 'youtube.com' in url or 'youtu.be' in url:
+            logger.info("🎬 إعدادات يوتيوب")
+            ydl_opts['extractor_args'] = {'youtube': ['player-client=web']}
+            
+        elif 'instagram.com' in url:
+            logger.info("📷 إعدادات انستغرام")
+            ydl_opts['extractor_args'] = {'instagram': ['no-check-certificate']}
+            
+        elif 'tiktok.com' in url:
+            logger.info("🎵 إعدادات تيك توك")
+            ydl_opts['extractor_args'] = {'tiktok': ['no-check-certificate']}
+            
+        elif 'facebook.com' in url or 'fb.watch' in url:
+            logger.info("📘 إعدادات فيسبوك")
+            ydl_opts['extractor_args'] = {'facebook': ['no-check-certificate']}
 
         if mode == 'audio':
             ydl_opts.update({
@@ -75,6 +108,8 @@ def download():
             else:
                 ydl_opts['format'] = 'best[ext=mp4]/best'
 
+        logger.info(f"بدء تحميل: {url}")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -88,9 +123,11 @@ def download():
         if not filename:
             return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
 
-        # ✅ هنا السر: نوجه المستخدم لصفحة فيها زر رجوع
+        # ✅ الرابط يشير لصفحة الفيديو مع زر الرجوع
         download_url = f"/video/{filename}"
 
+        logger.info(f"✅ تم التحميل بنجاح: {filename}")
+        
         return jsonify({
             'success': True,
             'download_url': download_url,
@@ -99,9 +136,10 @@ def download():
         })
 
     except Exception as e:
+        logger.error(f"❌ خطأ في التحميل: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# ✅ صفحة مشاهدة الفيديو مع زر رجوع (هذه الجديدة)
+# ✅ صفحة مشاهدة الفيديو مع زر الرجوع (الجزء المهم)
 @app.route('/video/<filename>')
 def video_page(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
@@ -145,34 +183,35 @@ def video_page(filename):
                 background: black;
                 margin: 20px 0;
             }}
-            .save-btn {{
-                display: inline-block;
-                margin: 20px auto;
-                padding: 18px 40px;
-                background: #28a745;
-                color: white;
-                text-decoration: none;
-                border-radius: 50px;
-                font-weight: bold;
-                font-size: 1.3rem;
-                width: 80%;
-                max-width: 300px;
+            .save-info {{
+                color: #ccc;
+                font-size: 0.9rem;
+                margin-top: 15px;
+                padding: 10px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 10px;
             }}
         </style>
     </head>
     <body>
-        <button onclick="window.location.href='/'" class="back-btn">🔙 رجوع للتطبيق</button>
-        <video controls autoplay>
+        <button onclick="window.location.href='/'" class="back-btn">🔙 رجوع للصفحة الرئيسية</button>
+        
+        <video controls playsinline webkit-playsinline>
             <source src="/get-video/{filename}" type="video/mp4">
         </video>
-        <a href="/get-video/{filename}" download class="save-btn">💾 حفظ الفيديو</a>
+        
+        <div class="save-info">
+            <p>📱 للحفظ:</p>
+            <p>1️⃣ اضغط على الثلاث نقاط (⋮) في مشغل الفيديو</p>
+            <p>2️⃣ اختر "Save Video"</p>
+        </div>
     </body>
     </html>
     '''
 
 # ✅ مسار الفيديو الخام (للتشغيل والتحميل)
 @app.route('/get-video/<filename>')
-def get_video(filename):
+def get_video_file(filename):
     path = os.path.join(DOWNLOAD_DIR, filename)
     return send_file(path, mimetype='video/mp4')
 
