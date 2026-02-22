@@ -1,120 +1,644 @@
-from flask import Flask, render_template, send_file, jsonify, request
-import os
-import yt_dlp
-import uuid
-import time
-import threading
-
-app = Flask(__name__)
-
-DOWNLOAD_DIR = "downloads"
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-
-ALLOWED_DOMAINS = [
-    "youtube.com", "youtu.be",
-    "tiktok.com", "vm.tiktok.com",
-    "instagram.com", "www.instagram.com",
-    "facebook.com", "fb.watch",
-    "twitter.com", "x.com"
-]
-
-def cleanup():
-    while True:
-        now = time.time()
-        for f in os.listdir(DOWNLOAD_DIR):
-            path = os.path.join(DOWNLOAD_DIR, f)
-            if os.path.isfile(path) and os.stat(path).st_mtime < now - 3600:
-                try: os.remove(path)
-                except: pass
-        time.sleep(1800)
-
-threading.Thread(target=cleanup, daemon=True).start()
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/download', methods=['POST'])
-def download():
-    data = request.get_json()
-    url = data.get('url')
-    mode = data.get('mode', 'video')
-    quality = data.get('quality', 'best')
-
-    if not url:
-        return jsonify({'error': '❌ الرابط مطلوب'}), 400
-
-    file_id = uuid.uuid4().hex[:8]
-    base = os.path.join(DOWNLOAD_DIR, file_id)
-
-    try:
-        ydl_opts = {
-            'outtmpl': f"{base}.%(ext)s",
-            'quiet': True,
-            'noplaylist': True,
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>EasyDown</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --dark: #1a1a2e;
+            --success: #28a745;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        /* القائمة الجانبية - الثلاث شرطات */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(26,26,46,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            padding: 80px 20px 20px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto;
+        }
+        
+        .sidebar.open {
+            right: 0;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        .lang-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .lang-item {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .lang-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        .help-text {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            line-height: 1.8;
+        }
+        
+        .help-text i {
+            color: var(--primary);
+            margin-left: 5px;
+        }
+        
+        .install-box {
+            background: rgba(40,167,69,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(40,167,69,0.3);
+        }
+        
+        .install-box i {
+            color: var(--success);
         }
 
-        # إضافة ملف الكوكيز إذا كان موجوداً
-        if os.path.exists('cookies.txt'):
-            ydl_opts['cookiefile'] = 'cookies.txt'
-
-        if mode == 'audio':
-            ydl_opts.update({
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                }],
-            })
-        else:
-            if quality == '480p':
-                ydl_opts['format'] = 'best[height<=480]'
-            elif quality == '720p':
-                ydl_opts['format'] = 'best[height<=720]'
-            elif quality == '1080p':
-                ydl_opts['format'] = 'best[height<=1080]'
-            else:
-                ydl_opts['format'] = 'best[ext=mp4]/best'
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            title = info.get('title', 'video')
-
-        filename = None
-        for f in os.listdir(DOWNLOAD_DIR):
-            if f.startswith(file_id):
-                filename = f
-                break
-
-        if not filename:
-            return jsonify({'error': '❌ فشل في إنشاء الملف'}), 500
-
-        download_url = f"/v/{filename}"
-
-        return jsonify({
-            'success': True,
-            'download_url': download_url,
-            'title': title,
-            'filename': filename
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/v/<filename>')
-def get_video(filename):
-    """مسار مباشر للفيديو"""
-    path = os.path.join(DOWNLOAD_DIR, filename)
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 30px auto;
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .input-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 15px 45px 15px 20px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            direction: ltr;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .clear-btn {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            display: none;
+        }
+        .input-wrapper.has-text .clear-btn {
+            display: block;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        .quality-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .quality-selector.show {
+            display: grid;
+        }
+        .quality-btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            cursor: pointer;
+        }
+        .quality-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        .download-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 15px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            min-height: 30px;
+        }
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .sites-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            color: rgba(255,255,255,0.5);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.3);
+        }
+        .share-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 15px;
+            border: none;
+            background: var(--success);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- القائمة الجانبية -->
+    <div class="menu-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
     
-    if not os.path.exists(path):
-        return 'الملف غير موجود', 404
-    
-    return send_file(
-        path,
-        mimetype='video/mp4',
-        as_attachment=False
-    )
+    <div class="sidebar" id="sidebar">
+        <div class="close-btn" onclick="toggleSidebar()">
+            <i class="fas fa-times"></i>
+        </div>
+        
+        <!-- اللغة -->
+        <div class="sidebar-section">
+            <div class="sidebar-title" data-i18n="language">🌐 اللغة</div>
+            <div class="lang-grid">
+                <div class="lang-item" onclick="changeLanguage('ar')">🇸🇦 العربية</div>
+                <div class="lang-item" onclick="changeLanguage('en')">🇺🇸 English</div>
+                <div class="lang-item" onclick="changeLanguage('tr')">🇹🇷 Türkçe</div>
+                <div class="lang-item" onclick="changeLanguage('ru')">🇷🇺 Русский</div>
+                <div class="lang-item" onclick="changeLanguage('fr')">🇫🇷 Français</div>
+                <div class="lang-item" onclick="changeLanguage('de')">🇩🇪 Deutsch</div>
+            </div>
+        </div>
+        
+        <!-- المساعدة -->
+        <div class="sidebar-section">
+            <div class="sidebar-title" data-i18n="help">📖 المساعدة</div>
+            <div class="help-text">
+                <p><i class="fas fa-link"></i> <span data-i18n="help1">الصق الرابط في الحقل</span></p>
+                <p><i class="fas fa-sliders-h"></i> <span data-i18n="help2">اختر فيديو أو صوت</span></p>
+                <p><i class="fas fa-video"></i> <span data-i18n="help3">اختر الجودة المناسبة</span></p>
+                <p><i class="fas fa-download"></i> <span data-i18n="help4">اضغط تحميل</span></p>
+                <p><i class="fas fa-mobile-alt"></i> <span data-i18n="help5">لآيفون: اضغط على زر المشاركة ثم اختر "Save Video"</span></p>
+                <p><i class="fas fa-folder"></i> <span data-i18n="help6">الفيديو يحفظ في الصور مباشرة</span></p>
+            </div>
+        </div>
+        
+        <!-- تثبيت التطبيق -->
+        <div class="sidebar-section">
+            <div class="sidebar-title" data-i18n="install">📱 تثبيت التطبيق</div>
+            <div class="install-box">
+                <p><i class="fas fa-share"></i> <span data-i18n="install1">اضغط زر المشاركة (مربع)</span></p>
+                <p><i class="fas fa-plus-circle"></i> <span data-i18n="install2">اختر "إضافة للشاشة الرئيسية"</span></p>
+                <p><i class="fas fa-check"></i> <span data-i18n="install3">اضغط "إضافة"</span></p>
+            </div>
+        </div>
+    </div>
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    <div id="mainScreen">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h1>EasyDown</h1>
+
+            <div class="input-card">
+                <div class="input-wrapper" id="inputWrapper">
+                    <input type="url" id="videoUrl" data-i18n-placeholder="paste" placeholder="الصق الرابط هنا" dir="ltr">
+                    <span class="clear-btn" onclick="clearInput()">
+                        <i class="fas fa-times-circle"></i>
+                    </span>
+                </div>
+
+                <div class="mode-selector">
+                    <button class="mode-btn active" id="videoMode" onclick="setMode('video')"><span data-i18n="video">🎬 فيديو</span></button>
+                    <button class="mode-btn" id="audioMode" onclick="setMode('audio')"><span data-i18n="audio">🎵 صوت</span></button>
+                </div>
+
+                <div class="quality-selector show" id="qualitySelector">
+                    <button class="quality-btn" onclick="selectQuality('480p')"><span data-i18n="q480">480p</span></button>
+                    <button class="quality-btn" onclick="selectQuality('720p')"><span data-i18n="q720">720p</span></button>
+                    <button class="quality-btn" onclick="selectQuality('1080p')"><span data-i18n="q1080">1080p</span></button>
+                    <button class="quality-btn active" onclick="selectQuality('best')"><span data-i18n="qbest">✨ أفضل</span></button>
+                </div>
+
+                <button class="download-btn" id="downloadBtn">
+                    <i class="fas fa-download"></i> <span data-i18n="download">تحميل</span>
+                </button>
+
+                <div id="status"></div>
+            </div>
+
+            <div class="sites-grid">
+                <i class="fab fa-youtube"></i>
+                <i class="fab fa-tiktok"></i>
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+
+            <div class="footer">EasyDown</div>
+        </div>
+    </div>
+
+    <script>
+        // الترجمات
+        const translations = {
+            ar: {
+                paste: 'الصق الرابط هنا',
+                video: '🎬 فيديو',
+                audio: '🎵 صوت',
+                download: 'تحميل',
+                q480: '480p',
+                q720: '720p',
+                q1080: '1080p',
+                qbest: '✨ أفضل',
+                language: '🌐 اللغة',
+                help: '📖 المساعدة',
+                help1: 'الصق الرابط في الحقل',
+                help2: 'اختر فيديو أو صوت',
+                help3: 'اختر الجودة المناسبة',
+                help4: 'اضغط تحميل',
+                help5: 'لآيفون: اضغط على زر المشاركة ثم اختر "Save Video"',
+                help6: 'الفيديو يحفظ في الصور مباشرة',
+                install: '📱 تثبيت التطبيق',
+                install1: 'اضغط زر المشاركة (مربع)',
+                install2: 'اختر "إضافة للشاشة الرئيسية"',
+                install3: 'اضغط "إضافة"'
+            },
+            en: {
+                paste: 'Paste link here',
+                video: '🎬 Video',
+                audio: '🎵 Audio',
+                download: 'Download',
+                q480: '480p',
+                q720: '720p',
+                q1080: '1080p',
+                qbest: '✨ Best',
+                language: '🌐 Language',
+                help: '📖 Help',
+                help1: 'Paste the link',
+                help2: 'Choose video/audio',
+                help3: 'Select quality',
+                help4: 'Press download',
+                help5: 'iPhone: Tap share button then select "Save Video"',
+                help6: 'Video saves directly to Photos',
+                install: '📱 Install App',
+                install1: 'Tap share button',
+                install2: 'Choose "Add to Home Screen"',
+                install3: 'Tap "Add"'
+            },
+            tr: {
+                paste: 'Linki yapıştır',
+                video: '🎬 Video',
+                audio: '🎵 Ses',
+                download: 'İndir',
+                q480: '480p',
+                q720: '720p',
+                q1080: '1080p',
+                qbest: '✨ En iyi',
+                language: '🌐 Dil',
+                help: '📖 Yardım',
+                help1: 'Linki yapıştır',
+                help2: 'Video/ses seç',
+                help3: 'Kalite seç',
+                help4: 'İndir e bas',
+                help5: 'iPhone: Paylaş butonuna bas, "Save Video" seç',
+                help6: 'Video doğrudan Fotoğraflara kaydedilir',
+                install: '📱 Uygulamayı Kur',
+                install1: 'Paylaş butonuna bas',
+                install2: 'Ana Ekrana Ekle seç',
+                install3: 'Ekle ye bas'
+            },
+            ru: {
+                paste: 'Вставьте ссылку',
+                video: '🎬 Видео',
+                audio: '🎵 Аудио',
+                download: 'Скачать',
+                q480: '480p',
+                q720: '720p',
+                q1080: '1080p',
+                qbest: '✨ Лучшее',
+                language: '🌐 Язык',
+                help: '📖 Помощь',
+                help1: 'Вставьте ссылку',
+                help2: 'Выберите видео/аудио',
+                help3: 'Выберите качество',
+                help4: 'Нажмите скачать',
+                help5: 'iPhone: Нажмите кнопку поделиться, выберите "Save Video"',
+                help6: 'Видео сохраняется прямо в Фото',
+                install: '📱 Установить приложение',
+                install1: 'Нажмите кнопку поделиться',
+                install2: 'Выберите "На экран «Домой»"',
+                install3: 'Нажмите "Добавить"'
+            }
+        };
+
+        let currentLang = 'ar';
+        let currentMode = 'video';
+        let currentQuality = 'best';
+        let downloading = false;
+        let currentVideoUrl = '';
+        let currentFilename = 'video.mp4';
+        let currentTitle = '';
+
+        const videoUrl = document.getElementById('videoUrl');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const sidebar = document.getElementById('sidebar');
+
+        // كشف نوع الجهاز
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        // تحديث اللغة
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+            
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+        }
+
+        function changeLanguage(lang) {
+            updateLanguage(lang);
+            sidebar.classList.remove('open');
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+        }
+
+        function clearInput() {
+            videoUrl.value = '';
+            inputWrapper.classList.remove('has-text');
+            videoUrl.focus();
+        }
+
+        videoUrl.addEventListener('input', function() {
+            if (this.value.trim()) {
+                inputWrapper.classList.add('has-text');
+            } else {
+                inputWrapper.classList.remove('has-text');
+            }
+        });
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('videoMode').classList.toggle('active', mode === 'video');
+            document.getElementById('audioMode').classList.toggle('active', mode === 'audio');
+            document.getElementById('qualitySelector').classList.toggle('show', mode === 'video');
+        }
+
+        function selectQuality(quality) {
+            currentQuality = quality;
+            document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // دالة المشاركة الذكية (النسخة التي تتذكرها)
+        async function shareVideo() {
+            if (!currentVideoUrl) return;
+            
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: currentTitle || 'EasyDown Video',
+                        url: currentVideoUrl
+                    });
+                } else {
+                    // إذا لم تدعم المشاركة، نعرض رابط مباشر
+                    window.open(currentVideoUrl, '_blank');
+                }
+            } catch (error) {
+                console.log('Share cancelled or failed');
+                // إذا فشلت المشاركة، نفتح الرابط مباشرة
+                window.open(currentVideoUrl, '_blank');
+            }
+        }
+
+        // دالة التحميل
+        async function handleDownload() {
+            const url = videoUrl.value.trim();
+
+            if (!url) {
+                document.getElementById('status').innerHTML = '⚠️ ' + (currentLang === 'ar' ? 'الصق الرابط' : 'Paste link');
+                return;
+            }
+
+            if (downloading) return;
+
+            downloading = true;
+            document.getElementById('downloadBtn').disabled = true;
+            document.getElementById('status').innerHTML = '<div class="loader"></div><p>' + (currentLang === 'ar' ? 'جاري التحميل...' : 'Downloading...') + '</p>';
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        mode: currentMode,
+                        quality: currentMode === 'video' ? currentQuality : 'best'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentVideoUrl = data.download_url;
+                    currentFilename = data.filename || 'video.mp4';
+                    currentTitle = data.title || 'EasyDown Video';
+
+                    // عرض رسالة النجاح مع زر المشاركة (النسخة الذكية)
+                    document.getElementById('status').innerHTML = `
+                        <div style="background: rgba(40,167,69,0.2); border-radius: 15px; padding: 20px; margin-top: 20px;">
+                            <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✅ ${currentLang === 'ar' ? 'الفيديو جاهز!' : 'Video ready!'}</p>
+                            <button onclick="shareVideo()" class="share-btn">
+                                <i class="fas fa-share"></i> ${currentLang === 'ar' ? 'مشاركة' : 'Share'}
+                            </button>
+                            ${isIOS ? `
+                                <p style="color: #ccc; font-size: 0.8rem; margin-top: 15px;">
+                                    <i class="fas fa-mobile-alt"></i> ${currentLang === 'ar' ? 'اضغط على زر المشاركة ثم اختر "Save Video"' : 'Tap share button then select "Save Video"'}
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('status').innerHTML = '❌ ' + (data.error || (currentLang === 'ar' ? 'فشل التحميل' : 'Download failed'));
+                }
+            } catch {
+                document.getElementById('status').innerHTML = '❌ ' + (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection error');
+            } finally {
+                downloading = false;
+                document.getElementById('downloadBtn').disabled = false;
+            }
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+
+        // إغلاق القائمة عند النقر خارجها
+        document.addEventListener('click', function(event) {
+            const menuBtn = document.querySelector('.menu-btn');
+            if (!sidebar.contains(event.target) && !menuBtn.contains(event.target) && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // اللغة الافتراضية
+        updateLanguage('ar');
+    </script>
+</body>
+</html>
